@@ -209,6 +209,8 @@
   .chip.correct{background:#1fb457} .chip.wrong{background:#d93636} .chip.passed{background:#ffd21f;color:#2c2000}
   .chip.cur{outline:3px solid #fff;outline-offset:1px}
   .c-tools{display:flex;gap:6px;flex-wrap:wrap}
+  .net{font:700 12px Montserrat;letter-spacing:0;color:var(--muted);margin-left:8px;padding:3px 8px;border-radius:99px;background:#fff1;vertical-align:middle}
+  .net.ok{color:#4fec8a} .net.off{color:#ff6b6b}
 
   /* ================= MODALS ================= */
   .modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
@@ -275,6 +277,7 @@
   <button class="hb-btn gh" data-act="switch">⇄ Turno <kbd>T</kbd></button>
   <div class="hb-ans hidden" id="hbAns"><span id="hbAnsText">—</span><button data-act="reveal">👁 R</button></div>
   <div class="hb-tools">
+    <button class="hb-btn gh" data-act="newGame" title="Nuevo juego">🔄 Nuevo</button>
     <button class="hb-btn gh" data-open="obs" title="Usar en OBS / streaming">📡 OBS</button>
     <button class="hb-btn gh" data-open="editor" title="Preguntas">✏️</button>
     <button class="hb-btn gh" data-open="settings" title="Configuración">⚙️</button>
@@ -286,8 +289,9 @@
 <!-- ============ CONTROL PANEL (?control) ============ -->
 <div class="control" id="control">
   <div class="c-head">
-    <div class="c-title">EL <span>ROSCO</span> · Panel del conductor</div>
+    <div class="c-title">EL <span>ROSCO</span> · Panel del conductor <span class="net" id="net">○ conectando…</span></div>
     <div class="c-tools">
+      <button class="pill danger" data-act="newGame">🔄 Nuevo juego</button>
       <button class="pill primary" data-act="openOverlay">📺 Abrir overlay</button>
       <button class="pill plain" data-open="obs">📡 Cómo usarlo en OBS</button>
       <button class="pill plain" data-open="editor">✏️ Preguntas</button>
@@ -341,32 +345,26 @@
 <div class="modal" id="obs"><div class="sheet" style="max-width:780px">
   <header><h2>📡 Usarlo en un stream (OBS / YouTube)</h2><button class="pill plain" data-close>Cerrar</button></header>
   <div class="body">
-    <p>El juego tiene 3 vistas del mismo link, que se sincronizan solas:</p>
-    <ul>
-      <li><b>Panel del conductor</b> — botones + respuestas (no sale al aire).</li>
-      <li><b>Overlay</b> — solo el rosco, relojes y la definición, en 1920×1080. El hueco del centro queda en <b style="color:#00ff00">verde croma</b> para meter la cámara.</li>
-      <li><b>Pantalla</b> — la vista para jugar presencial / proyector (esta).</li>
-    </ul>
-    <h3>Opción A — Chrome + Captura de ventana (la más simple)</h3>
+    <p>El panel y el overlay se conectan por internet con el <b>código de sala</b> de este panel. Por eso el overlay se actualiza solo aunque esté en OBS, en otra ventana o en otra compu.</p>
+    <h3>Opción A — Fuente de navegador en OBS (recomendada)</h3>
     <ol>
-      <li>Abrí el <b>panel del conductor</b> en Chrome:<div class="urlrow"><input readonly id="urlControl"><button class="pill plain" data-copy="urlControl">Copiar</button></div></li>
-      <li>Ahí tocá <b>📺 Abrir overlay</b>. Se abre otra ventana con el rosco. Dejala abierta (puede quedar atrás de otras ventanas) y hacé un clic en ella una vez para activar el sonido.</li>
-      <li>En OBS: <b>+ → Captura de ventana</b> (en Mac: “Captura de pantalla de macOS” → Método: Ventana) → elegí la ventana <b>“Rosco · Overlay”</b>.</li>
-      <li>Clic derecho en la fuente → <b>Filtros → + → Clave de croma</b> (color verde). El centro queda transparente.</li>
-      <li>Poné tu <b>cámara debajo</b> del overlay en la lista de fuentes y movela/escalala para que la persona quede centrada en el círculo.</li>
-      <li>Opcional, para los sonidos: <b>+ → Captura de audio de aplicación → Google Chrome</b>.</li>
+      <li>Manejá el juego desde este panel, en Chrome.</li>
+      <li>En OBS: <b>+ → Navegador</b> → pegá este link → ancho <b>1920</b>, alto <b>1080</b> → Aceptar:
+        <div class="urlrow"><input readonly id="urlOverlayAlpha"><button class="pill plain" data-copy="urlOverlayAlpha">Copiar</button></div>
+        El centro del rosco queda transparente.</li>
+      <li>Poné tu <b>cámara debajo</b> del rosco en la lista de fuentes y acomodala para que la persona quede centrada en el círculo.</li>
+      <li>Para los sonidos: en la fuente de navegador tildá “Controlar el audio mediante OBS”.</li>
     </ol>
-    <p>Variantes del overlay (pegá este link en otra ventana si querés):</p>
-    <div class="urlrow"><input readonly id="urlOverlay"><button class="pill plain" data-copy="urlOverlay">Copiar</button></div>
+    <p style="font-size:13px;color:var(--muted)">Si el overlay no se actualiza: fijate que arriba de este panel diga <b>● Online</b>. En OBS, botón derecho sobre la fuente → Propiedades → “Actualizar caché de la página actual”.</p>
+    <h3>Opción B — Ventana de Chrome + croma</h3>
+    <ol>
+      <li>Tocá <b>📺 Abrir overlay</b> (o abrí este link en una ventana):<div class="urlrow"><input readonly id="urlOverlay"><button class="pill plain" data-copy="urlOverlay">Copiar</button></div></li>
+      <li>En OBS: <b>Captura de ventana</b> de “Rosco · Overlay” → Filtros → <b>Clave de croma</b> verde → cámara debajo.</li>
+    </ol>
+    <p>Versión “flotante” (todo el fondo verde, el rosco encima de la cámara a pantalla completa):</p>
     <div class="urlrow"><input readonly id="urlOverlayFloat"><button class="pill plain" data-copy="urlOverlayFloat">Copiar</button></div>
-    <p style="font-size:13px;color:var(--muted)">La segunda es “flotante”: todo el fondo verde, así el rosco queda encima de la cámara a pantalla completa.</p>
-    <h3>Opción B — todo adentro de OBS, con transparencia real (sin croma)</h3>
-    <ol>
-      <li>En OBS: <b>+ → Navegador</b>, ancho 1920, alto 1080, con este link:<div class="urlrow"><input readonly id="urlOverlayAlpha"><button class="pill plain" data-copy="urlOverlayAlpha">Copiar</button></div></li>
-      <li>Agregá <b>otra</b> fuente de <b>Navegador</b> con el panel del conductor (link del paso A1), y <b>ocultala</b> (ojito).</li>
-      <li>Para manejar el juego: clic derecho sobre esa fuente oculta → <b>Interactuar</b>. Se abre una ventana con los botones y respuestas, y el overlay se actualiza solo.</li>
-    </ol>
-    <p style="font-size:13px;color:var(--muted)">Ojo: una fuente de navegador de OBS no comparte datos con tu Chrome. Por eso, en la opción B, panel y overlay tienen que estar los dos dentro de OBS.</p>
+    <h3>Abrir este mismo panel en otra compu</h3>
+    <div class="urlrow"><input readonly id="urlControl"><button class="pill plain" data-copy="urlControl">Copiar</button></div>
   </div>
 </div></div>
 
@@ -410,6 +408,7 @@
   </div>
 </div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
 <script>
 const LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 const STORE_KEY = 'rosco-lla-v1';
@@ -520,14 +519,61 @@ function save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 function commit(evType, extra){
   if (evType) state.ev = Object.assign({ t: evType, n: (state.ev?.n || 0) + 1 }, extra || {});
   state.rev = (state.rev || 0) + 1;
+  state.ts = Math.max(Date.now(), (state.ts || 0) + 1);
   save();
   try { bc && bc.postMessage(state); } catch(e){}
+  publish();
   render();
 }
+const newer = (s, cur) => (s.ts || 0) !== (cur.ts || 0) ? (s.ts || 0) > (cur.ts || 0) : (s.rev || 0) > (cur.rev || 0);
 function adopt(s){
-  if (!s || !s.teams || (s.rev || 0) <= (state.rev || 0)) return;
+  if (!s || !s.teams || !newer(s, state)) return;
   state = s; isClock = false; lastRemote = Date.now();
+  if (MODE !== 'overlay') save();
   render();
+}
+
+/* ---- online sync (works across browsers / OBS / computers) via a public MQTT broker ----
+   The panel picks a random "sala" code; the overlay link carries it (&sala=XXXX).          */
+const SALA = (() => {
+  if (params.get('sala')){
+    const c = params.get('sala').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (MODE !== 'overlay') try { localStorage.setItem('rosco-sala', c); } catch(e){}
+    return c;
+  }
+  if (MODE === 'overlay') return '';
+  try {
+    let c = localStorage.getItem('rosco-sala');
+    if (!c){ c = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join(''); localStorage.setItem('rosco-sala', c); }
+    return c;
+  } catch(e){ return ''; }
+})();
+const TOPIC = 'rosco-lla/v1/' + SALA;
+let mq = null, mqReady = false;
+function setNet(st){
+  const n = document.getElementById('net'); if (!n) return;
+  n.className = 'net ' + st;
+  n.textContent = st === 'ok' ? '● Online · sala ' + SALA : st === 'off' ? '● Sin conexión (solo funciona en esta compu)' : '○ conectando…';
+}
+function publish(){
+  if (!mq || !mqReady || MODE === 'overlay') return;
+  try { mq.publish(TOPIC, JSON.stringify(state), { retain: true, qos: 0 }); } catch(e){}
+}
+function connectOnline(){
+  if (!SALA || !window.mqtt){ setNet('off'); return; }
+  mq = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+    clientId: 'rosco_' + Math.random().toString(16).slice(2, 10), reconnectPeriod: 2000, connectTimeout: 8000, clean: true,
+  });
+  mq.on('connect', () => {
+    mq.subscribe(TOPIC, () => {
+      setNet('ok');
+      // give the retained (latest) game a moment to arrive before announcing ours
+      setTimeout(() => { mqReady = true; publish(); }, 1500);
+    });
+  });
+  mq.on('message', (t, payload) => { try { adopt(JSON.parse(payload.toString())); } catch(e){} });
+  mq.on('offline', () => setNet('off'));
+  mq.on('error', () => setNet('off'));
 }
 if (bc) bc.onmessage = e => adopt(e.data);
 window.addEventListener('storage', e => { if (e.key === STORE_KEY && e.newValue){ try { adopt(JSON.parse(e.newValue)); } catch(_){} } });
@@ -837,9 +883,9 @@ document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e =
 const anyModalOpen = () => !!document.querySelector('.modal.open');
 
 function baseUrl(){ return location.origin + location.pathname; }
-function overlayUrl(extra = ''){ return baseUrl() + '?overlay' + extra; }
+function overlayUrl(extra = ''){ return baseUrl() + '?overlay' + (SALA ? '&sala=' + SALA : '') + extra; }
 function fillUrls(){
-  $('urlControl').value = baseUrl() + '?control';
+  $('urlControl').value = baseUrl() + '?control' + (SALA ? '&sala=' + SALA : '');
   $('urlOverlay').value = overlayUrl();
   $('urlOverlayFloat').value = overlayUrl('&fondo=flotante');
   $('urlOverlayAlpha').value = overlayUrl('&transparente');
@@ -904,11 +950,12 @@ $('btnApplyTime').onclick = () => {
   for (const t of TEAMS) state.teams[t].time = state.teams[t].seconds;
   state.finished = false; closeModal('settings'); commit();
 };
-$('btnReset').onclick = () => {
-  if (!confirm('¿Reiniciar la partida? Se borra el progreso de ambos roscos (preguntas y nombres se mantienen).')) return;
-  readCfg(); pushUndo(); isClock = false; state = freshState(state); closeModal('settings');
-  save(); try { bc && bc.postMessage(state); } catch(e){} render();
-};
+function newGame(){
+  if (!confirm('¿Empezar un juego nuevo? Se borra el progreso de ambos roscos (preguntas, nombres y tiempos se mantienen).')) return false;
+  pushUndo(); isClock = false; state = freshState(state); commit('reset');
+  return true;
+}
+$('btnReset').onclick = () => { readCfg(); if (newGame()) closeModal('settings'); };
 $('btnExport').onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
@@ -933,7 +980,7 @@ const ACTIONS = {
   play: togglePlay, undo, switch: switchTurn,
   reveal: () => { state.showAnswer = !state.showAnswer; render(); },
   full: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(),
-  openOverlay,
+  openOverlay, newGame,
 };
 document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => { ACTIONS[b.dataset.act](); b.blur(); }));
 
@@ -972,6 +1019,7 @@ if (MODE === 'overlay'){
   }
 }
 if (!readStored()) save();
+connectOnline();
 lastTick = performance.now();
 setInterval(tick, 100);
 </script>
