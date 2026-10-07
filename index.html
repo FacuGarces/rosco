@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Rosco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#f3f6ff; --muted:#93a0d6; --panel:#0e1536; --panel2:#151e48; --line:#26316c;
+    --chroma:#00ff00;
+    --team:#2f7bff; --team2:#0a36b0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:#050817;color:var(--ink);font-family:Montserrat,system-ui,sans-serif;overflow:hidden}
+  button{font:inherit;color:inherit;cursor:pointer}
+  kbd{font:800 11px Montserrat;background:#0004;padding:2px 6px;border-radius:5px}
+
+  /* ================= STAGE 1920×1080 ================= */
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  .stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+  .stage *{user-select:none}
+
+  .bg{position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 900px 700px at 960px 450px, color-mix(in srgb,var(--team) 34%, transparent), transparent 70%),
+      repeating-conic-gradient(from 0deg at 960px 450px, rgba(255,255,255,.035) 0 5deg, transparent 5deg 10deg),
+      radial-gradient(ellipse 1400px 500px at 960px 1150px, color-mix(in srgb,var(--team) 22%, transparent), transparent 70%),
+      linear-gradient(180deg,#04071a 0%,#0a1338 55%,#04061a 100%);
+    -webkit-mask:radial-gradient(circle at 960px 450px, transparent 0 314px, #000 316px);
+            mask:radial-gradient(circle at 960px 450px, transparent 0 314px, #000 316px);
+    transition:background .6s}
+  .hole{position:absolute;left:960px;top:450px;width:632px;height:632px;margin:-316px 0 0 -316px;border-radius:50%}
+  .hole.studio{background:radial-gradient(circle at 50% 40%, color-mix(in srgb,var(--team) 30%, #0b1236), #050817 75%)}
+
+  .band{position:absolute;left:960px;top:450px;width:840px;height:840px;margin:-420px 0 0 -420px;border-radius:50%;
+    background:radial-gradient(circle, transparent 0 315px, #060a1e 317px 411px, transparent 413px);
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--team) 70%, white), 0 0 60px 8px color-mix(in srgb,var(--team) 55%, transparent);
+    transition:box-shadow .5s}
+  .band::after{content:"";position:absolute;inset:102px;border-radius:50%;
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--team) 70%, white), 0 0 40px 4px color-mix(in srgb,var(--team) 55%, transparent);transition:box-shadow .5s}
+
+  .ring{position:absolute;inset:0}
+  .ring.swap{animation:swap .6s cubic-bezier(.2,.9,.3,1.15)}
+  @keyframes swap{0%{transform:rotate(-120deg) scale(.8);opacity:0}100%{transform:none;opacity:1}}
+  .ring.shake{animation:shake .45s}
+  @keyframes shake{20%,60%{translate:-14px 0}40%,80%{translate:14px 0}}
+  .ring { transform-origin:960px 450px }
+
+  .ball{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;
+    display:grid;place-items:center;font:900 40px/1 Montserrat;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45);
+    --b1:#4b95ff; --b2:#0a36b0;
+    background:
+      radial-gradient(circle at 33% 26%, rgba(255,255,255,.85) 0 5%, rgba(255,255,255,0) 30%),
+      radial-gradient(circle at 50% 58%, var(--b1) 0%, var(--b2) 80%);
+    box-shadow:0 8px 18px rgba(0,0,0,.55), inset 0 -9px 14px rgba(0,0,0,.35), 0 0 0 3px rgba(255,255,255,.22);
+    transition:transform .35s cubic-bezier(.3,1.7,.5,1), box-shadow .3s;cursor:pointer}
+  .t-naranja .ball{--b1:#ffa24d; --b2:#c24a00}
+  .ball.correct{--b1:#61f59a !important; --b2:#08853a !important}
+  .ball.wrong{--b1:#ff6f6f !important; --b2:#9e1212 !important}
+  .ball.passed{--b1:#ffe46b !important; --b2:#cf9600 !important; color:#3b2a00; text-shadow:none}
+  .ball.current{transform:scale(1.3);z-index:5;
+    box-shadow:0 0 0 5px #fff, 0 0 40px 10px rgba(255,255,255,.55), 0 10px 20px rgba(0,0,0,.6);animation:glow 1.2s ease-in-out infinite}
+  @keyframes glow{50%{box-shadow:0 0 0 7px #fff, 0 0 60px 18px rgba(255,255,255,.75), 0 10px 20px rgba(0,0,0,.6)}}
+  .ball.pop{animation:pop .55s cubic-bezier(.3,1.8,.5,1)}
+  @keyframes pop{0%{transform:scale(1.3)}40%{transform:scale(1.7)}100%{transform:scale(1)}}
+
+  /* center (pantalla / control) */
+  .center-info{position:absolute;left:960px;top:450px;width:600px;height:600px;margin:-300px 0 0 -300px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+  .ci-team{font:900 30px Montserrat;letter-spacing:5px;text-transform:uppercase;color:color-mix(in srgb,var(--team) 60%, white)}
+  .ci-letter{width:250px;height:250px;border-radius:50%;display:grid;place-items:center;font:900 160px/1 Montserrat;color:#fff;
+    text-shadow:0 6px 12px rgba(0,0,0,.4);
+    background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, var(--team) 0%, var(--team2) 80%);
+    box-shadow:0 0 0 6px #fff, 0 0 70px 10px color-mix(in srgb,var(--team) 70%, transparent), inset 0 -18px 30px rgba(0,0,0,.35)}
+  .ci-letter.passed{background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, #ffe46b 0%, #cf9600 80%);color:#3b2a00;text-shadow:none}
+  .ci-rule{font:900 34px Montserrat;letter-spacing:3px;text-transform:uppercase}
+
+  /* team cards */
+  .tcard{position:absolute;top:215px;width:390px;padding:30px 30px 26px;border-radius:34px;text-align:center;
+    background:linear-gradient(180deg, #10183e, #060a1e);
+    border:3px solid color-mix(in srgb,var(--tc) 55%, transparent);
+    box-shadow:0 20px 50px rgba(0,0,0,.5);transition:transform .4s, opacity .4s, box-shadow .4s}
+  .tcard.left{left:70px} .tcard.right{left:1460px}
+  .tcard.on{transform:scale(1.05);box-shadow:0 0 0 3px var(--tc), 0 0 60px 6px color-mix(in srgb,var(--tc) 55%, transparent), 0 20px 50px rgba(0,0,0,.5)}
+  .tcard.off{filter:brightness(.55) saturate(.6);transform:scale(.94)}
+  .tc-name{font:900 34px/1.1 Montserrat;text-transform:uppercase;letter-spacing:2px;color:color-mix(in srgb,var(--tc) 65%, white);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tc-live{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font:800 18px Montserrat;letter-spacing:3px;padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--muted)}
+  .tc-live i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
+  .tcard.on .tc-live{color:#fff;background:color-mix(in srgb,var(--tc) 45%, transparent)}
+  .tcard.running .tc-live i{background:#ff3b3b;animation:blink 1s steps(2) infinite}
+  .tc-clock{font:900 170px/1 Montserrat;font-variant-numeric:tabular-nums;letter-spacing:-4px;margin:14px 0 0;text-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .tc-clock.low{color:#ff4b4b;animation:blink .8s steps(2) infinite}
+  .tc-clock.zero{color:#5b6699}
+  .tc-sub{font:800 18px Montserrat;letter-spacing:6px;color:var(--muted);margin-top:-4px}
+  .tc-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+  .tc-stat{background:rgba(255,255,255,.05);border-radius:20px;padding:12px 6px}
+  .tc-stat b{display:block;font:900 64px/1 Montserrat}
+  .tc-stat small{font:800 15px Montserrat;letter-spacing:3px;color:var(--muted)}
+  .tc-stat.ok b{color:#4fec8a} .tc-stat.err b{color:#ff5a5a}
+  .tc-dots{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;margin-top:20px;padding:0 4px}
+  .tc-dots span{aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--tc) 70%, #000)}
+  .tc-dots span.correct{background:#3ee07a} .tc-dots span.wrong{background:#ff4b4b} .tc-dots span.passed{background:#ffd21f}
+  .tc-badge{margin-top:16px;font:900 20px Montserrat;letter-spacing:2px;color:#ffd21f;min-height:24px}
+  @keyframes blink{50%{opacity:.35}}
+
+  /* definition bar */
+  .defbar{position:absolute;left:230px;top:892px;width:1460px;height:160px;display:flex;align-items:center;gap:30px;padding:0 44px 0 26px;
+    border-radius:80px;background:linear-gradient(180deg, #10183e, #060a1e);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--team) 70%, white), 0 0 50px 4px color-mix(in srgb,var(--team) 45%, transparent), 0 20px 40px rgba(0,0,0,.5);transition:box-shadow .5s}
+  .db-ball{flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;font:900 64px/1 Montserrat;color:#fff;
+    background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, var(--team) 0%, var(--team2) 80%);
+    box-shadow:0 0 0 4px #fff, inset 0 -10px 16px rgba(0,0,0,.35)}
+  .db-ball.passed{background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, #ffe46b 0%, #cf9600 80%);color:#3b2a00}
+  .db-text{flex:1;min-width:0}
+  .db-rule{font:900 26px Montserrat;letter-spacing:4px;text-transform:uppercase;color:color-mix(in srgb,var(--team) 55%, white)}
+  .db-rule em{font-style:normal;color:#ffd21f;margin-left:12px}
+  .db-def{font:700 36px/1.22 Montserrat;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .db-def.s{font-size:31px} .db-def.xs{font-size:27px}
+  .db-def.missing{color:#ffd21f;font-style:italic}
+
+  /* banners + final */
+  .banner{position:absolute;left:960px;top:450px;transform:translate(-50%,-50%) scale(0);font:italic 900 128px/1 Montserrat;white-space:nowrap;
+    letter-spacing:-2px;-webkit-text-stroke:6px #1a1200;paint-order:stroke fill;text-shadow:0 10px 0 rgba(0,0,0,.35);pointer-events:none;z-index:20;opacity:0}
+  .banner.go{animation:banner 1.5s cubic-bezier(.2,1.4,.4,1) forwards}
+  @keyframes banner{0%{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}18%{transform:translate(-50%,-50%) scale(1.08) rotate(-4deg);opacity:1}
+    75%{transform:translate(-50%,-50%) scale(1) rotate(-4deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1.25) rotate(-4deg);opacity:0}}
+  .flashring{position:absolute;left:960px;top:450px;width:840px;height:840px;margin:-420px 0 0 -420px;border-radius:50%;pointer-events:none;opacity:0}
+  .flashring.go{animation:fr .7s ease-out}
+  @keyframes fr{0%{opacity:1;box-shadow:0 0 0 10px var(--fc), 0 0 120px 40px var(--fc)}100%{opacity:0;box-shadow:0 0 0 60px transparent, 0 0 200px 80px transparent}}
+
+  .final{position:absolute;left:960px;top:450px;width:1000px;transform:translate(-50%,-50%);text-align:center;padding:40px 50px 46px;border-radius:44px;z-index:30;
+    background:linear-gradient(180deg, rgba(16,24,62,.97), rgba(6,10,30,.97));box-shadow:0 0 0 4px #ffd21f, 0 0 90px 10px rgba(255,210,31,.4), 0 30px 80px rgba(0,0,0,.7);
+    display:none}
+  .final.show{display:block;animation:swap .7s cubic-bezier(.2,.9,.3,1.15)}
+  .final h1{margin:0;font:italic 900 86px/1.05 Montserrat;color:#ffd21f;-webkit-text-stroke:3px #1a1200;paint-order:stroke fill}
+  .final .sub{font:800 24px Montserrat;color:var(--muted);letter-spacing:4px;margin-top:6px}
+  .final .sc{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
+  .final .sc div{border-radius:28px;padding:20px;background:rgba(255,255,255,.05);border:3px solid var(--tc)}
+  .final .sc h3{margin:0;font:900 30px Montserrat;text-transform:uppercase;color:color-mix(in srgb,var(--tc) 60%, white)}
+  .final .sc b{display:block;font:900 110px/1 Montserrat;color:#4fec8a}
+  .final .sc p{margin:4px 0 0;font:800 22px Montserrat;color:#ff6b6b}
+
+  .soundhint{position:absolute;left:24px;top:24px;font:800 20px Montserrat;background:#000c;padding:10px 16px;border-radius:12px;z-index:40;cursor:pointer}
+
+  /* ---------- background modes ---------- */
+  body.mode-overlay .center-info{display:none}
+  body.f-flotante .bg{display:none}
+  body.mode-overlay .hole{background:var(--chroma)}
+  body.mode-overlay.f-flotante{background:var(--chroma)}
+  body.mode-overlay.f-flotante .hole{background:transparent}
+  body.alpha, body.alpha.f-flotante{background:transparent !important}
+  body.alpha .hole{background:transparent !important}
+
+  /* ================= HOST BAR (pantalla) ================= */
+  .hostbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;padding:10px 14px;flex-wrap:wrap;
+    background:#070b1fee;border-top:1px solid var(--line);z-index:10}
+  .hostbar[hidden]{display:none}
+  .hb-btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;
+    box-shadow:0 3px 0 rgba(0,0,0,.4)}
+  .hb-btn:active{transform:translateY(2px);box-shadow:none}
+  .hb-btn:disabled{opacity:.35;cursor:not-allowed}
+  .g{background:#22c55e;color:#03230e} .y{background:#ffd21f;color:#2c2000} .r{background:#ef4444} .w{background:#fff;color:#0a0f25}
+  .w.running{background:#ffb3b3}
+  .gh{background:var(--panel2);border:1px solid var(--line);box-shadow:none}
+  .hb-ans{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:#0008;border:1px dashed var(--line);border-radius:12px;padding:8px 12px}
+  .hb-ans span{font-weight:900;letter-spacing:1px;transition:filter .2s}
+  .hb-ans.hidden span{filter:blur(8px)}
+  .hb-ans button{margin-left:auto;background:#fff1;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px;font-weight:700}
+  .hb-sep{width:1px;height:30px;background:var(--line)}
+  .hb-tools{display:flex;gap:6px}
+  @media (max-width:900px){ .hb-btn{padding:9px 10px;font-size:13px} .hb-btn kbd{display:none} }
+
+  /* ================= CONTROL MODE ================= */
+  body.mode-control{overflow:auto}
+  body.mode-control #viewport{position:relative;inset:auto;width:100%;aspect-ratio:16/9;border-radius:14px;border:1px solid var(--line)}
+  .control{display:none;max-width:1300px;margin:0 auto;padding:14px 16px 30px;gap:14px}
+  body.mode-control .control{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+  @media (max-width:900px){ body.mode-control .control{grid-template-columns:1fr} }
+  .c-head{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .c-title{font:900 20px Montserrat;letter-spacing:1px} .c-title span{color:#ffd21f}
+  .c-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .c-card.cur{border-top:5px solid var(--team)}
+  .c-turn{display:flex;align-items:center;gap:10px;font:900 16px Montserrat;text-transform:uppercase;letter-spacing:1px}
+  .c-turn i{width:12px;height:12px;border-radius:50%;background:var(--team)}
+  .c-turn.running i{background:#ff3b3b;animation:blink 1s steps(2) infinite}
+  .c-letter{display:flex;gap:14px;align-items:center}
+  .c-letter .db-ball{width:70px;height:70px;font-size:38px}
+  .c-rule{font:900 20px Montserrat;text-transform:uppercase}
+  .c-def{font:700 19px/1.4 Montserrat}
+  .c-def.missing{color:#ffd21f;font-style:italic}
+  .c-ans{background:#000a;border-radius:12px;padding:12px 14px;font:900 26px Montserrat;letter-spacing:1px;color:#ffd21f}
+  .c-ans small{display:block;font:800 11px Montserrat;color:var(--muted);letter-spacing:2px}
+  .c-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .c-actions .hb-btn, .c-row .hb-btn{justify-content:center;flex-direction:column;gap:3px;padding:16px 8px;font-size:16px}
+  .c-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+  .c-team{border-left:5px solid var(--tc)}
+  .c-team-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .c-team-h b{font:900 18px Montserrat;text-transform:uppercase;color:color-mix(in srgb,var(--tc) 65%, white)}
+  .c-team-h span{font:900 34px Montserrat;font-variant-numeric:tabular-nums}
+  .c-team-s{font-size:13px;color:var(--muted);font-weight:700}
+  .c-team-s em{font-style:normal;color:#4fec8a} .c-team-s strong{color:#ff6b6b}
+  .chips{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+  .chip{aspect-ratio:1;border-radius:50%;border:none;padding:0;font:900 12px Montserrat;color:#fff;background:color-mix(in srgb,var(--tc) 75%, #000)}
+  .chip.correct{background:#1fb457} .chip.wrong{background:#d93636} .chip.passed{background:#ffd21f;color:#2c2000}
+  .chip.cur{outline:3px solid #fff;outline-offset:1px}
+  .c-tools{display:flex;gap:6px;flex-wrap:wrap}
+
+  /* ================= MODALS ================= */
+  .modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .modal.open{display:flex}
+  .sheet{background:#0b1230;border:1px solid var(--line);border-radius:18px;max-width:900px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+  .sheet header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
+  .sheet header h2{margin:0;font:900 20px Montserrat}
+  .sheet .body{padding:16px 18px;overflow:auto}
+  .sheet footer{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .sheet p,.sheet li{line-height:1.6;color:#d7ddf7;font-size:15px}
+  .sheet h3{margin:18px 0 4px;font:900 16px Montserrat;color:#ffd21f}
+  .tabs{display:flex;gap:6px}
+  .tab{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:800;font-size:13px}
+  .tab.on.azul{background:#1f6bff} .tab.on.naranja{background:#ff7a1a}
+  .qrow{display:grid;grid-template-columns:36px 120px 190px 1fr;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid #ffffff10}
+  @media (max-width:700px){ .qrow{grid-template-columns:36px 1fr} .qrow textarea{grid-column:1 / -1} .qrow input{grid-column:2} }
+  .qrow .l{font:900 22px Montserrat;text-align:center;padding-top:6px}
+  .qrow.empty .l{color:#ffd21f}
+  input,select,textarea{background:#060b22;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;font-size:14px;width:100%}
+  textarea{resize:vertical;min-height:40px}
+  label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800;color:var(--muted);margin-bottom:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:600px){.grid2{grid-template-columns:1fr}}
+  .pill{border:none;border-radius:10px;padding:9px 14px;font-weight:800;font-size:14px}
+  .pill.primary{background:#ffd21f;color:#2a1f00} .pill.danger{background:#ef4444} .pill.plain{background:var(--panel2);border:1px solid var(--line)}
+  .urlrow{display:flex;gap:6px;margin:6px 0 4px}
+  .urlrow input{font:600 13px ui-monospace,monospace}
+</style>
+</head>
+<body>
+
+<!-- ============ STAGE (shared by every mode) ============ -->
+<div id="viewport">
+  <div class="stage" id="stage">
+    <div class="bg"></div>
+    <div class="hole" id="hole"></div>
+    <div class="band"></div>
+    <div class="ring" id="ring"></div>
+    <div class="center-info">
+      <div class="ci-team" id="ciTeam"></div>
+      <div class="ci-letter" id="ciLetter">A</div>
+      <div class="ci-rule" id="ciRule"></div>
+    </div>
+    <div class="flashring" id="flashring"></div>
+    <div class="tcard left" id="card-azul"></div>
+    <div class="tcard right" id="card-naranja"></div>
+    <div class="defbar">
+      <div class="db-ball" id="dbBall">A</div>
+      <div class="db-text"><div class="db-rule" id="dbRule"></div><div class="db-def" id="dbDef"></div></div>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div class="final" id="final"></div>
+  </div>
+</div>
+
+<!-- ============ HOST BAR (pantalla) ============ -->
+<div class="hostbar" id="hostbar" hidden>
+  <button class="hb-btn g" data-act="correct">✔ Correcta <kbd>C</kbd></button>
+  <button class="hb-btn y" data-act="passed">⟳ Pasapalabra <kbd>P</kbd></button>
+  <button class="hb-btn r" data-act="wrong">✖ Incorrecta <kbd>X</kbd></button>
+  <span class="hb-sep"></span>
+  <button class="hb-btn w" data-act="play">▶ Reloj <kbd>Espacio</kbd></button>
+  <button class="hb-btn gh" data-act="undo">↶ <kbd>Z</kbd></button>
+  <button class="hb-btn gh" data-act="switch">⇄ Turno <kbd>T</kbd></button>
+  <div class="hb-ans hidden" id="hbAns"><span id="hbAnsText">—</span><button data-act="reveal">👁 R</button></div>
+  <div class="hb-tools">
+    <button class="hb-btn gh" data-open="obs" title="Usar en OBS / streaming">📡 OBS</button>
+    <button class="hb-btn gh" data-open="editor" title="Preguntas">✏️</button>
+    <button class="hb-btn gh" data-open="settings" title="Configuración">⚙️</button>
+    <button class="hb-btn gh" data-open="rules" title="Reglas">📖</button>
+    <button class="hb-btn gh" data-act="full" title="Pantalla completa">⛶</button>
+  </div>
+</div>
+
+<!-- ============ CONTROL PANEL (?control) ============ -->
+<div class="control" id="control">
+  <div class="c-head">
+    <div class="c-title">EL <span>ROSCO</span> · Panel del conductor</div>
+    <div class="c-tools">
+      <button class="pill primary" data-act="openOverlay">📺 Abrir overlay</button>
+      <button class="pill plain" data-open="obs">📡 Cómo usarlo en OBS</button>
+      <button class="pill plain" data-open="editor">✏️ Preguntas</button>
+      <button class="pill plain" data-open="settings">⚙️ Configuración</button>
+      <button class="pill plain" data-open="rules">📖 Reglas</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div id="previewSlot"></div>
+    <div class="c-card c-team" id="cteam-azul"></div>
+    <div class="c-card c-team" id="cteam-naranja"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="c-card cur">
+      <div class="c-turn" id="cTurn"><i></i><span></span></div>
+      <div class="c-letter"><div class="db-ball" id="cBall">A</div><div class="c-rule" id="cRule"></div></div>
+      <div class="c-def" id="cDef"></div>
+      <div class="c-ans"><small>RESPUESTA (solo la ves vos)</small><span id="cAns">—</span></div>
+    </div>
+    <div class="c-actions">
+      <button class="hb-btn g" data-act="correct">✔ Correcta<kbd>C</kbd></button>
+      <button class="hb-btn y" data-act="passed">⟳ Pasapalabra<kbd>P</kbd></button>
+      <button class="hb-btn r" data-act="wrong">✖ Incorrecta<kbd>X</kbd></button>
+    </div>
+    <div class="c-row">
+      <button class="hb-btn w" data-act="play">▶ Arrancar reloj<kbd>Espacio</kbd></button>
+      <button class="hb-btn gh" data-act="undo">↶ Deshacer<kbd>Z</kbd></button>
+      <button class="hb-btn gh" data-act="switch">⇄ Turno<kbd>T</kbd></button>
+    </div>
+    <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.6">Tocá una letra de los mini‑roscos para saltar a ella. Todo se guarda solo y se sincroniza con el overlay abierto en este mismo navegador.</p>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal" id="rules"><div class="sheet">
+  <header><h2>Cómo se juega El Rosco</h2><button class="pill plain" data-close>Cerrar</button></header>
+  <div class="body">
+    <ol>
+      <li>Cada equipo tiene <b>su propio rosco</b> (Azul y Naranja), con una palabra por letra de la A a la Z incluida la Ñ. “<b>Con la…</b>” = la palabra empieza con esa letra; “<b>Contiene la…</b>” = la letra está en algún lugar de la palabra.</li>
+      <li>Cada equipo tiene <b>su propio reloj</b>, que solo corre mientras ese equipo responde.</li>
+      <li><b>Acierta</b> → letra <b style="color:#4fec8a">verde</b> y sigue jugando sin frenar el reloj.<br>
+          <b>“¡Pasapalabra!”</b> → letra <b style="color:#ffd21f">amarilla</b>, se frena el reloj y juega el rival. La letra vuelve en la próxima vuelta.<br>
+          <b>Falla</b> → letra <b style="color:#ff6b6b">roja</b>, suma un error, se frena el reloj y juega el rival.</li>
+      <li>Se alternan hasta que cada equipo complete su rosco o se quede sin tiempo. Si uno termina, el otro sigue solo.</li>
+      <li><b>Gana el que tiene más aciertos.</b> Empate → gana el que tiene <b>menos errores</b>. Rosco completo sin errores = “bote”.</li>
+    </ol>
+    <p><b>Atajos:</b> <kbd>Espacio</kbd> reloj · <kbd>C</kbd> correcta · <kbd>X</kbd> incorrecta · <kbd>P</kbd> pasapalabra · <kbd>R</kbd> ver respuesta · <kbd>Z</kbd> deshacer · <kbd>T</kbd> cambiar turno.</p>
+  </div>
+</div></div>
+
+<div class="modal" id="obs"><div class="sheet" style="max-width:780px">
+  <header><h2>📡 Usarlo en un stream (OBS / YouTube)</h2><button class="pill plain" data-close>Cerrar</button></header>
+  <div class="body">
+    <p>El juego tiene 3 vistas del mismo link, que se sincronizan solas:</p>
+    <ul>
+      <li><b>Panel del conductor</b> — botones + respuestas (no sale al aire).</li>
+      <li><b>Overlay</b> — solo el rosco, relojes y la definición, en 1920×1080. El hueco del centro queda en <b style="color:#00ff00">verde croma</b> para meter la cámara.</li>
+      <li><b>Pantalla</b> — la vista para jugar presencial / proyector (esta).</li>
+    </ul>
+    <h3>Opción A — Chrome + Captura de ventana (la más simple)</h3>
+    <ol>
+      <li>Abrí el <b>panel del conductor</b> en Chrome:<div class="urlrow"><input readonly id="urlControl"><button class="pill plain" data-copy="urlControl">Copiar</button></div></li>
+      <li>Ahí tocá <b>📺 Abrir overlay</b>. Se abre otra ventana con el rosco. Dejala abierta (puede quedar atrás de otras ventanas) y hacé un clic en ella una vez para activar el sonido.</li>
+      <li>En OBS: <b>+ → Captura de ventana</b> (en Mac: “Captura de pantalla de macOS” → Método: Ventana) → elegí la ventana <b>“Rosco · Overlay”</b>.</li>
+      <li>Clic derecho en la fuente → <b>Filtros → + → Clave de croma</b> (color verde). El centro queda transparente.</li>
+      <li>Poné tu <b>cámara debajo</b> del overlay en la lista de fuentes y movela/escalala para que la persona quede centrada en el círculo.</li>
+      <li>Opcional, para los sonidos: <b>+ → Captura de audio de aplicación → Google Chrome</b>.</li>
+    </ol>
+    <p>Variantes del overlay (pegá este link en otra ventana si querés):</p>
+    <div class="urlrow"><input readonly id="urlOverlay"><button class="pill plain" data-copy="urlOverlay">Copiar</button></div>
+    <div class="urlrow"><input readonly id="urlOverlayFloat"><button class="pill plain" data-copy="urlOverlayFloat">Copiar</button></div>
+    <p style="font-size:13px;color:var(--muted)">La segunda es “flotante”: todo el fondo verde, así el rosco queda encima de la cámara a pantalla completa.</p>
+    <h3>Opción B — todo adentro de OBS, con transparencia real (sin croma)</h3>
+    <ol>
+      <li>En OBS: <b>+ → Navegador</b>, ancho 1920, alto 1080, con este link:<div class="urlrow"><input readonly id="urlOverlayAlpha"><button class="pill plain" data-copy="urlOverlayAlpha">Copiar</button></div></li>
+      <li>Agregá <b>otra</b> fuente de <b>Navegador</b> con el panel del conductor (link del paso A1), y <b>ocultala</b> (ojito).</li>
+      <li>Para manejar el juego: clic derecho sobre esa fuente oculta → <b>Interactuar</b>. Se abre una ventana con los botones y respuestas, y el overlay se actualiza solo.</li>
+    </ol>
+    <p style="font-size:13px;color:var(--muted)">Ojo: una fuente de navegador de OBS no comparte datos con tu Chrome. Por eso, en la opción B, panel y overlay tienen que estar los dos dentro de OBS.</p>
+  </div>
+</div></div>
+
+<div class="modal" id="editor"><div class="sheet">
+  <header><h2>Preguntas</h2>
+    <div class="tabs"><button class="tab azul on" data-tab="azul">Rosco Azul</button><button class="tab naranja" data-tab="naranja">Rosco Naranja</button></div>
+  </header>
+  <div class="body" id="editorBody"></div>
+  <footer>
+    <button class="pill plain" id="btnDefaults">Restaurar preguntas originales</button>
+    <button class="pill plain" data-close>Cancelar</button>
+    <button class="pill primary" id="btnSaveQ">Guardar preguntas</button>
+  </footer>
+</div></div>
+
+<div class="modal" id="settings"><div class="sheet" style="max-width:620px">
+  <header><h2>Configuración</h2><button class="pill plain" data-close>Cerrar</button></header>
+  <div class="body">
+    <div class="grid2">
+      <label class="f">Nombre equipo azul<input id="nameAzul"></label>
+      <label class="f">Nombre equipo naranja<input id="nameNaranja"></label>
+      <label class="f">Segundos equipo azul<input id="secAzul" type="number" min="5" step="5"></label>
+      <label class="f">Segundos equipo naranja<input id="secNaranja" type="number" min="5" step="5"></label>
+    </div>
+    <div class="grid2">
+      <label class="f">¿Qué equipo arranca?<select id="starter"><option value="azul">Azul</option><option value="naranja">Naranja</option></select></label>
+      <label class="f">Sonidos<select id="soundSel"><option value="1">Activados</option><option value="0">Silenciados</option></select></label>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Los segundos se aplican al reiniciar. “Aplicar al reloj actual” cambia el tiempo restante ya mismo.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="pill primary" id="btnSaveCfg">Guardar</button>
+      <button class="pill plain" id="btnApplyTime">Aplicar al reloj actual</button>
+      <button class="pill danger" id="btnReset">Reiniciar partida</button>
+    </div>
+    <hr style="border-color:var(--line);margin:18px 0">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="pill plain" id="btnExport">⬇ Exportar partida (JSON)</button>
+      <button class="pill plain" id="btnImport">⬆ Importar partida</button>
+      <input type="file" id="fileImport" accept="application/json,.json" hidden>
+    </div>
+  </div>
+</div></div>
+
+<script>
+const LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const STORE_KEY = 'rosco-lla-v1';
+const TEAMS = ['azul','naranja'];
+const COLORS = { azul:['#2f7bff','#0a36b0'], naranja:['#ff8a2a','#c24a00'] };
+
+const params = new URLSearchParams(location.search);
+const MODE = params.has('overlay') ? 'overlay' : params.has('control') ? 'control' : 'pantalla';
+document.body.classList.add('mode-' + MODE);
+if (params.get('fondo') === 'flotante') document.body.classList.add('f-flotante');
+if (params.has('transparente')) document.body.classList.add('alpha');
+if (MODE === 'overlay') document.title = 'Rosco · Overlay';
+if (MODE === 'control') document.title = 'Rosco · Panel del conductor';
+
+// [letra, 'empieza' | 'contiene', palabra, definición]
+const DEFAULT_WORDS = {
+  azul: [
+    ['A','empieza','AFIP','Organismo histórico de recaudación impositiva y aduanera de la Argentina.'],
+    ['B','empieza','BOLSOS','Lo que José López revoleaba por encima del muro de un convento, cargados de dólares.'],
+    ['C','empieza','CASTA','Término popularizado en Argentina para referirse a los políticos corruptos.'],
+    ['D','empieza','DNU','Sigla del Decreto de Necesidad y Urgencia emitido por el Poder Ejecutivo.'],
+    ['E','empieza','EVEREST','Nombre de la banda en la que tocaba el presidente Javier Milei.'],
+    ['F','empieza','FMI','Fondo Monetario Internacional, organismo financiero internacional con el que Argentina renegocia recurrentemente su deuda.'],
+    ['G','empieza','GRABOIS','Juan, dirigente social argentino, abogado y referente de la Unión de Trabajadores de la Economía Popular (UTEP).'],
+    ['H','empieza','HOLOCAUSTO','Genocidio perpetrado por el régimen nazi durante la Segunda Guerra Mundial.'],
+    ['I','empieza','INDEC','Instituto oficial encargado de medir la inflación y la pobreza en la Argentina.'],
+    ['J','empieza','JUBILACIÓN','Haber previsional que perciben los adultos mayores tras concluir su vida laboral.'],
+    ['K','empieza','KICILLOF','Repudiable e inoperante gobernador de la provincia de Buenos Aires.'],
+    ['L','empieza','LOUSTEAU','Tibio senador nacional y presidente del comité nacional de la UCR.'],
+    ['M','empieza','MILEI','El gran León.'],
+    ['N','empieza','NEGRERIO',''],
+    ['Ñ','contiene','COMPAÑERO','Forma tradicional en la que se denominan y saludan las mierdas del peronismo.'],
+    ['O','empieza','OBELISCO','Monumento icónico porteño que alguna vez fue cubierto por un condón gigante.'],
+    ['P','empieza','PULLARO','Dirigente radical y gobernador de la provincia de Santa Fe cuyo nombre comienza con M.'],
+    ['Q','empieza','QUINTELA','Ricardo, gobernador de la provincia de La Rioja y referente del PJ.'],
+    ['R','empieza','RIAL','Ensobrado periodista de espectáculos y conductor de distintos programas, con una conflictiva relación con su hija.'],
+    ['S','empieza','STANLEY','Marca de termos importados muy popularizada en el mundo.'],
+    ['T','empieza','TRUMP','Magnate inmobiliario que popularizó el lema “Hacer a EE. UU. grande otra vez”.'],
+    ['U','empieza','UCR','Partido político nacional más antiguo en actividad en la Argentina.'],
+    ['V','empieza','VILLARRUEL','Apellido de la actual traidora.'],
+    ['W','contiene','WALL STREET','Calle del distrito financiero de Nueva York donde cotizan las acciones y bonos argentinos.'],
+    ['X','contiene','MARX','Autor de El Capital y padre del comunismo.'],
+    ['Y','contiene','YPF','Empresa argentina líder en la explotación y producción de petróleo y gas, fundamental para el sector energético del país.'],
+    ['Z','empieza','ZELENSKI','Abogado, actor, comediante y actual presidente de Ucrania.'],
+  ],
+  naranja: [
+    ['A','empieza','ADORNI','Exvocero presidencial y figura destacada de las conferencias matutinas en la Casa Rosada.'],
+    ['B','empieza','BULLRICH','Exdirigente del PRO y actual presidente del bloque de La Libertad Avanza en el Senado.'],
+    ['C','empieza','CFK','Sigla por la que se conoce popularmente a la condenada.'],
+    ['D','empieza','DÓLAR','Tipo de moneda que volvía loco al pingüino.'],
+    ['E','empieza','ESTÚPIDO','Adjetivo calificativo que utilizamos para describir a Grabois.'],
+    ['F','empieza','FRANCOS','Funcionario clave en el diálogo con las provincias que asumió la Jefatura de Gabinete.'],
+    ['G','empieza','GALPERIN','Empresario que revolucionó el comercio electrónico y las finanzas digitales en América Latina, odiado por vagos de mierda.'],
+    ['H','empieza','HOUSTON','Ciudad petrolera de EE. UU. adonde viajan frecuentemente empresarios y mandatarios para buscar inversiones en Vaca Muerta.'],
+    ['I','empieza','INFLACIÓN','Suba generalizada de precios que constituye uno de los mayores problemas históricos de la Argentina.'],
+    ['J','empieza','JUSTICIA','Principio moral y legal del que huyen los kukas cuando no está a su favor.'],
+    ['K','empieza','KISSINGER','Influyente y polémico diplomático estadounidense, referente de la Guerra Fría, cuyo nombre de pila comienza con H.'],
+    ['L','empieza','LLA','Sigla abreviada de nuestro partido político.'],
+    ['M','empieza','MACRI','Presidente de Boca en el 98.'],
+    ['N','empieza','NICOLÁS',''],
+    ['Ñ','empieza','ÑOQUI','Empleado público inservible.'],
+    ['O','empieza','ONU','Organización internacional descripta últimamente como inútil según nuestro presidente.'],
+    ['P','empieza','PUTIN','Presidente de la Federación Rusa con fuerte peso geopolítico global.'],
+    ['Q','empieza','QUILMES','Municipio del conurbano bonaerense gobernado por la chorra de Mendoza.'],
+    ['R','empieza','ROSADA','Sede principal del Poder Ejecutivo Nacional.'],
+    ['S','empieza','SERGIO','Nombre de pila del hombre más romántico de la política.'],
+    ['T','empieza','TRAUMA',''],
+    ['U','empieza','UNIÓN POR LA PATRIA','Nombre de la coalición peronista que llevó a Sergio Massa como candidato a presidente en 2023.'],
+    ['V','empieza','VACA MUERTA','Formación hidrocarburífera clave en la provincia del Neuquén para la soberanía energética.'],
+    ['W','contiene','WASHINGTON','Capital de EE. UU., donde tienen sede la Casa Blanca, el FMI y el Banco Mundial.'],
+    ['X','contiene','XENOFOBIA','Rechazo u odio a los extranjeros, debate habitual en temas migratorios.'],
+    ['Y','empieza','YUYITO','Conductora y figura del espectáculo vinculada al ámbito mediático y personal del presidente.'],
+    ['Z','empieza','ZARANCHO','Diputada nacional sin el secundario completo.'],
+  ],
+};
+
+function defaultWords(team){ return DEFAULT_WORDS[team].map(([l,t,w,d]) => ({l,t,w,d})); }
+function newTeam(team, name, seconds){
+  return { name, seconds, time: seconds, words: defaultWords(team), status: LETTERS.map(() => 'pending'), idx: 0 };
+}
+function freshState(prev){
+  const s = {
+    v: 2, rev: 0, ev: { t: 'reset', n: 0 }, active: 'azul', running: false, showAnswer: false, finished: false, sound: true, starter: 'azul',
+    teams: { azul: newTeam('azul','Equipo Azul',150), naranja: newTeam('naranja','Equipo Naranja',150) },
+  };
+  if (prev){ // keep config + questions, reset progress
+    s.rev = (prev.rev || 0) + 1; s.ev = { t: 'reset', n: (prev.ev?.n || 0) + 1 };
+    s.sound = prev.sound; s.starter = prev.starter || 'azul'; s.active = s.starter;
+    for (const t of TEAMS){
+      const p = prev.teams[t];
+      Object.assign(s.teams[t], { name: p.name, seconds: p.seconds, time: p.seconds, words: p.words });
+    }
+  }
+  return s;
+}
+
+/* ================= persistence + sync between windows ================= */
+let state, undoStack = [];
+let isClock = false;          // this window owns the running clock
+let lastRemote = Date.now();  // last time another window sent us state
+const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('rosco-lla') : null;
+
+function readStored(){
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw){ const s = JSON.parse(raw); if (s && s.teams && s.teams.azul && s.teams.naranja) return s; } } catch(e){}
+  return null;
+}
+function save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){} }
+function commit(evType, extra){
+  if (evType) state.ev = Object.assign({ t: evType, n: (state.ev?.n || 0) + 1 }, extra || {});
+  state.rev = (state.rev || 0) + 1;
+  save();
+  try { bc && bc.postMessage(state); } catch(e){}
+  render();
+}
+function adopt(s){
+  if (!s || !s.teams || (s.rev || 0) <= (state.rev || 0)) return;
+  state = s; isClock = false; lastRemote = Date.now();
+  render();
+}
+if (bc) bc.onmessage = e => adopt(e.data);
+window.addEventListener('storage', e => { if (e.key === STORE_KEY && e.newValue){ try { adopt(JSON.parse(e.newValue)); } catch(_){} } });
+setInterval(() => { if (!isClock){ const s = readStored(); if (s) adopt(s); } }, 400); // fallback
+
+function pushUndo(){ undoStack.push(JSON.stringify(state)); if (undoStack.length > 200) undoStack.shift(); }
+
+/* ================= game logic ================= */
+const other = t => t === 'azul' ? 'naranja' : 'azul';
+const isOpen = st => st === 'pending' || st === 'passed';
+function nextIdx(T, from){
+  for (let k = 1; k <= LETTERS.length; k++){ const i = (from + k) % LETTERS.length; if (isOpen(T.status[i])) return i; }
+  return -1;
+}
+const hasLetters = T => T.status.some(isOpen);
+const canPlay = team => { const T = state.teams[team]; return T.time > 0 && hasLetters(T); };
+const count = (T, st) => T.status.filter(s => s === st).length;
+
+function endTurnFor(team){
+  if (canPlay(other(team))){ state.running = false; state.active = other(team); }
+  else if (!canPlay(team)) state.running = false;
+}
+function checkEnd(){
+  if (!canPlay('azul') && !canPlay('naranja') && !state.finished){ state.running = false; state.finished = true; return true; }
+  return false;
+}
+function mark(result){
+  if (state.finished || MODE === 'overlay') return;
+  const team = state.active, T = state.teams[team], i = T.idx;
+  if (i < 0 || !isOpen(T.status[i])) return;
+  ensureAudio(); pushUndo();
+  T.status[i] = result; state.showAnswer = false;
+  T.idx = nextIdx(T, i);
+  if (result === 'correct'){ if (T.idx === -1) endTurnFor(team); }
+  else if (result === 'wrong') endTurnFor(team);
+  else if (canPlay(other(team))) endTurnFor(team);
+  isClock = state.running;
+  commit(checkEnd() ? 'end' : result, { team, i });
+}
+function togglePlay(){
+  if (state.finished || MODE === 'overlay') return;
+  ensureAudio();
+  if (state.running){ state.running = false; isClock = false; commit('pause'); return; }
+  if (!canPlay(state.active)){
+    if (canPlay(other(state.active))) state.active = other(state.active);
+    else { if (checkEnd()) commit('end'); return; }
+  }
+  state.running = true; isClock = true; lastTick = performance.now(); commit('start');
+}
+function switchTurn(){
+  if (state.finished) return;
+  pushUndo(); state.running = false; isClock = false; state.active = other(state.active); state.showAnswer = false; commit('turn');
+}
+function undo(){
+  if (!undoStack.length) return;
+  const times = { azul: state.teams.azul.time, naranja: state.teams.naranja.time }, rev = state.rev, ev = state.ev;
+  state = JSON.parse(undoStack.pop());
+  for (const t of TEAMS) state.teams[t].time = Math.min(state.teams[t].time, times[t]) || times[t]; // never refund spent seconds
+  state.running = false; state.finished = false; isClock = false; state.rev = rev; state.ev = ev;
+  commit('undo');
+}
+function jumpTo(team, i){
+  const T = state.teams[team];
+  if (MODE === 'overlay' || state.finished || !isOpen(T.status[i])) return;
+  pushUndo(); T.idx = i; state.showAnswer = false; commit();
+}
+
+/* ================= clock ================= */
+let lastTick = performance.now();
+function tick(){
+  const now = performance.now(), dt = (now - lastTick) / 1000; lastTick = now;
+  if (!state.running) return;
+  if (!isClock){
+    // the window that owned the clock went away → take over (never from the overlay)
+    if (MODE !== 'overlay' && Date.now() - lastRemote > 2500){ isClock = true; }
+    return;
+  }
+  const T = state.teams[state.active];
+  const before = Math.ceil(T.time);
+  T.time = Math.max(0, T.time - dt);
+  if (T.time <= 0){
+    T.time = 0; const team = state.active;
+    endTurnFor(team); state.running = false; isClock = false;
+    commit(checkEnd() ? 'end' : 'timeup', { team });
+    return;
+  }
+  if (Math.ceil(T.time) !== before) commit(Math.ceil(T.time) <= 5 ? 'tick' : null);
+}
+
+/* ================= rendering ================= */
+const $ = id => document.getElementById(id);
+const RCX = 960, RCY = 450, RR = 365;
+function buildStage(){
+  const ring = $('ring');
+  LETTERS.forEach((L, i) => {
+    const a = (i / LETTERS.length) * 2 * Math.PI - Math.PI / 2;
+    const b = document.createElement('div');
+    b.className = 'ball'; b.textContent = L;
+    b.style.left = (RCX + RR * Math.cos(a)) + 'px';
+    b.style.top  = (RCY + RR * Math.sin(a)) + 'px';
+    b.addEventListener('click', () => jumpTo(state.active, i));
+    ring.appendChild(b);
+  });
+  for (const t of TEAMS){
+    const c = $('card-' + t);
+    c.style.setProperty('--tc', COLORS[t][0]);
+    c.innerHTML = `<div class="tc-name"></div><div class="tc-live"><i></i><span></span></div>
+      <div class="tc-clock"></div><div class="tc-sub">SEGUNDOS</div>
+      <div class="tc-stats"><div class="tc-stat ok"><b class="n-ok"></b><small>ACIERTOS</small></div><div class="tc-stat err"><b class="n-err"></b><small>ERRORES</small></div></div>
+      <div class="tc-dots">${LETTERS.map(() => '<span></span>').join('')}</div><div class="tc-badge"></div>`;
+  }
+  if (MODE === 'control'){
+    $('previewSlot').appendChild($('viewport'));
+    for (const t of TEAMS){
+      const c = $('cteam-' + t); c.style.setProperty('--tc', COLORS[t][0]);
+      c.innerHTML = `<div class="c-team-h"><b></b><span></span></div><div class="c-team-s"></div>
+        <div class="chips">${LETTERS.map((L, i) => `<button class="chip" data-i="${i}">${L}</button>`).join('')}</div>`;
+      c.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+        const i = +ch.dataset.i;
+        if (state.active !== t){ if (!isOpen(state.teams[t].status[i])) return; pushUndo(); state.running = false; isClock = false; state.active = t; state.teams[t].idx = i; commit('turn'); }
+        else jumpTo(t, i);
+      }));
+    }
+  }
+  if (MODE === 'pantalla') $('hostbar').hidden = false;
+}
+
+function fit(){
+  const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
+  const s = Math.min(W / 1920, H / 1080);
+  $('stage').style.transform = `translate(${(W - 1920 * s) / 2}px, ${(H - 1080 * s) / 2}px) scale(${s})`;
+}
+function layout(){
+  if (MODE === 'pantalla') $('viewport').style.bottom = $('hostbar').offsetHeight + 'px';
+  fit();
+}
+
+let lastActive = null, lastEvN = null, booted = false;
+function ruleText(w, L){ return (w && w.t === 'contiene' ? 'Contiene la ' : 'Con la ') + L; }
+
+function render(){
+  const team = state.active, T = state.teams[team];
+  const [c1, c2] = COLORS[team];
+  document.documentElement.style.setProperty('--team', c1);
+  document.documentElement.style.setProperty('--team2', c2);
+
+  // ring
+  const ring = $('ring');
+  ring.classList.toggle('t-naranja', team === 'naranja');
+  ring.querySelectorAll('.ball').forEach((b, i) => {
+    const st = T.status[i];
+    b.className = 'ball' + (st !== 'pending' ? ' ' + st : '') + (i === T.idx && !state.finished ? ' current' : '');
+  });
+  if (lastActive !== null && lastActive !== team){ ring.classList.remove('swap'); void ring.offsetWidth; ring.classList.add('swap'); }
+  lastActive = team;
+
+  // cards
+  for (const t of TEAMS){
+    const X = state.teams[t], c = $('card-' + t);
+    const on = t === team && !state.finished;
+    c.classList.toggle('on', on); c.classList.toggle('off', !on && !state.finished);
+    c.classList.toggle('running', on && state.running);
+    const nm = c.querySelector('.tc-name');
+    nm.textContent = X.name; nm.style.fontSize = X.name.length > 16 ? '22px' : X.name.length > 12 ? '27px' : '';
+    c.querySelector('.tc-live span').textContent = on ? (state.running ? 'EN JUEGO' : 'SU TURNO') : 'ESPERA';
+    const s = Math.ceil(X.time), clk = c.querySelector('.tc-clock');
+    clk.textContent = s; clk.classList.toggle('low', s <= 10 && s > 0); clk.classList.toggle('zero', s === 0);
+    c.querySelector('.n-ok').textContent = count(X, 'correct');
+    c.querySelector('.n-err').textContent = count(X, 'wrong');
+    c.querySelectorAll('.tc-dots span').forEach((d, i) => d.className = X.status[i] === 'pending' ? '' : X.status[i]);
+    c.querySelector('.tc-badge').textContent = !hasLetters(X) ? (count(X,'wrong') === 0 ? '🏆 ¡ROSCO COMPLETO!' : 'ROSCO TERMINADO') : X.time <= 0 ? '⏱ SIN TIEMPO' : '';
+  }
+
+  // current letter
+  const i = T.idx, w = i >= 0 ? T.words[i] : null, passed = w && T.status[i] === 'passed';
+  const L = w ? LETTERS[i] : '✓';
+  $('dbBall').textContent = L; $('dbBall').classList.toggle('passed', !!passed);
+  $('ciLetter').textContent = L; $('ciLetter').classList.toggle('passed', !!passed);
+  $('ciTeam').textContent = T.name;
+  $('ciRule').textContent = w ? ruleText(w, LETTERS[i]) : (hasLetters(T) ? 'Sin tiempo' : 'Rosco terminado');
+  $('dbRule').innerHTML = '';
+  $('dbRule').append(w ? ruleText(w, LETTERS[i]) : T.name);
+  if (passed){ const em = document.createElement('em'); em.textContent = '· PASADA'; $('dbRule').append(em); }
+  const def = $('dbDef');
+  const dtext = w ? (w.d || 'Definición pendiente') : (canPlay(other(team)) ? 'Turno del otro equipo' : 'No quedan letras para jugar');
+  if (state.finished){ $('dbRule').textContent = 'Fin del Rosco'; $('dbBall').textContent = '🏆'; }
+  def.textContent = state.finished ? 'Gana el que tiene más aciertos · si empatan, el que tiene menos errores' : dtext;
+  def.className = 'db-def' + (dtext.length > 150 ? ' xs' : dtext.length > 105 ? ' s' : '') + (w && !w.d ? ' missing' : '');
+
+  // final
+  const fin = $('final');
+  if (state.finished){
+    const A = state.teams.azul, N = state.teams.naranja;
+    const a = count(A,'correct'), n = count(N,'correct'), ae = count(A,'wrong'), ne = count(N,'wrong');
+    let title, sub = '';
+    if (a !== n) title = '¡GANA ' + (a > n ? A.name : N.name) + '!';
+    else if (ae !== ne){ title = '¡GANA ' + (ae < ne ? A.name : N.name) + '!'; sub = 'Empate en aciertos · gana por menos errores'; }
+    else title = '¡EMPATE!';
+    fin.innerHTML = `<h1></h1><div class="sub"></div><div class="sc">${TEAMS.map(t => `<div style="--tc:${COLORS[t][0]}"><h3></h3><b>${count(state.teams[t],'correct')}</b><p>${count(state.teams[t],'wrong')} errores</p></div>`).join('')}</div>`;
+    fin.querySelector('h1').textContent = title.toUpperCase();
+    fin.querySelector('.sub').textContent = sub || 'ACIERTOS';
+    fin.querySelectorAll('h3').forEach((h, k) => h.textContent = state.teams[TEAMS[k]].name);
+    if (!fin.classList.contains('show')) fin.classList.add('show');
+  } else fin.classList.remove('show');
+
+  // host bar / control panel
+  document.querySelectorAll('[data-act="correct"],[data-act="passed"],[data-act="wrong"]').forEach(b => b.disabled = state.finished || !w);
+  document.querySelectorAll('[data-act="play"]').forEach(b => {
+    b.classList.toggle('running', state.running); b.disabled = state.finished;
+    b.innerHTML = (state.running ? '⏸ Pausar' : '▶ Arrancar') + (MODE === 'control' ? ' reloj' : '') + '<kbd>Espacio</kbd>';
+  });
+  document.querySelectorAll('[data-act="undo"]').forEach(b => b.disabled = !undoStack.length);
+  if (MODE === 'pantalla'){
+    $('hbAnsText').textContent = w ? w.w : '—';
+    $('hbAns').classList.toggle('hidden', !state.showAnswer);
+  }
+  if (MODE === 'control') renderControl(T, w, i, passed);
+
+  // one-shot events (animations + sound)
+  const ev = state.ev || { n: 0 };
+  if (lastEvN !== ev.n){
+    const fresh = booted; lastEvN = ev.n;
+    if (fresh) playEvent(ev);
+  }
+}
+
+function renderControl(T, w, i, passed){
+  $('cTurn').classList.toggle('running', state.running);
+  $('cTurn').querySelector('span').textContent = state.finished ? 'Fin del juego' : 'Turno: ' + T.name + (state.running ? ' · reloj corriendo' : ' · reloj frenado');
+  $('cBall').textContent = w ? LETTERS[i] : '✓'; $('cBall').classList.toggle('passed', !!passed);
+  $('cRule').textContent = w ? ruleText(w, LETTERS[i]) + (passed ? ' · pasada' : '') : '—';
+  $('cDef').textContent = w ? (w.d || '⚠ Falta la definición — cargala en ✏️ Preguntas') : '—';
+  $('cDef').classList.toggle('missing', !!(w && !w.d));
+  $('cAns').textContent = w ? w.w : '—';
+  for (const t of TEAMS){
+    const X = state.teams[t], c = $('cteam-' + t);
+    c.querySelector('.c-team-h b').textContent = X.name + (t === state.active && !state.finished ? ' ◀' : '');
+    c.querySelector('.c-team-h span').textContent = Math.ceil(X.time) + 's';
+    c.querySelector('.c-team-s').innerHTML = `<em>${count(X,'correct')} aciertos</em> · <strong>${count(X,'wrong')} errores</strong> · ${X.status.filter(isOpen).length} por jugar`;
+    c.querySelectorAll('.chip').forEach((ch, k) => ch.className = 'chip' + (X.status[k] !== 'pending' ? ' ' + X.status[k] : '') + (k === X.idx && t === state.active ? ' cur' : ''));
+  }
+}
+
+function banner(text, color){
+  const b = $('banner'); b.textContent = text; b.style.color = color;
+  b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
+}
+function flashRing(color){
+  const f = $('flashring'); f.style.setProperty('--fc', color);
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+function playEvent(ev){
+  const audible = MODE !== 'control' && state.sound;
+  const ring = $('ring');
+  switch (ev.t){
+    case 'correct': {
+      const b = ring.children[ev.i];
+      if (b && ev.team === state.active){ b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+      flashRing('rgba(62,224,122,.8)'); audible && sfx.correct(); break; }
+    case 'wrong':
+      flashRing('rgba(255,70,70,.85)'); ring.classList.remove('shake'); void ring.offsetWidth; ring.classList.add('shake');
+      audible && sfx.wrong(); break;
+    case 'passed': banner('¡PASAPALABRA!', '#ffd21f'); audible && sfx.pass(); break;
+    case 'timeup': banner('¡TIEMPO!', '#ff4b4b'); flashRing('rgba(255,70,70,.85)'); audible && sfx.timeUp(); break;
+    case 'start': audible && sfx.start(); break;
+    case 'tick': audible && sfx.tickLow(); break;
+    case 'end': audible && sfx.end(); break;
+  }
+}
+
+/* ================= sound (WebAudio, no files) ================= */
+let ac = null;
+function ensureAudio(){
+  if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  if (ac && ac.state === 'suspended') ac.resume();
+}
+function tone(freq, start, dur, type = 'sine', vol = .25, toFreq){
+  if (!ac || ac.state !== 'running') return;
+  const t0 = ac.currentTime + start, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (toFreq) o.frequency.exponentialRampToValueAtTime(toFreq, t0 + dur);
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .01); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+  o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + .05);
+}
+const sfx = {
+  correct(){ tone(880,0,.15,'triangle'); tone(1320,.1,.3,'triangle'); },
+  wrong(){ tone(160,0,.5,'sawtooth',.2); tone(120,0,.5,'square',.08); },
+  pass(){ tone(700,0,.35,'sine',.22,300); },
+  start(){ tone(600,0,.08,'square',.1); },
+  tickLow(){ tone(1000,0,.06,'square',.08); },
+  timeUp(){ tone(220,0,1.1,'sawtooth',.22); tone(110,0,1.1,'square',.1); },
+  end(){ [523,659,784,1046].forEach((f,k) => tone(f,k*.13,.35,'triangle',.2)); },
+};
+
+/* ================= modals ================= */
+function openModal(id){
+  if (id === 'editor') buildEditor(editorTab);
+  if (id === 'settings') fillSettings();
+  if (id === 'obs') fillUrls();
+  $(id).classList.add('open');
+}
+function closeModal(id){ $(id).classList.remove('open'); if (id === 'editor') draft = null; }
+document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.open)));
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
+  if (e.target === m || e.target.hasAttribute('data-close')) closeModal(m.id);
+}));
+const anyModalOpen = () => !!document.querySelector('.modal.open');
+
+function baseUrl(){ return location.origin + location.pathname; }
+function overlayUrl(extra = ''){ return baseUrl() + '?overlay' + extra; }
+function fillUrls(){
+  $('urlControl').value = baseUrl() + '?control';
+  $('urlOverlay').value = overlayUrl();
+  $('urlOverlayFloat').value = overlayUrl('&fondo=flotante');
+  $('urlOverlayAlpha').value = overlayUrl('&transparente');
+}
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+  const inp = $(b.dataset.copy); inp.select();
+  (navigator.clipboard ? navigator.clipboard.writeText(inp.value) : Promise.reject()).catch(() => document.execCommand('copy'));
+  b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = 'Copiar', 1500);
+}));
+function openOverlay(){
+  window.open(overlayUrl(), 'rosco-overlay', 'popup,width=1280,height=760');
+}
+
+/* editor */
+let editorTab = 'azul', draft = null;
+function buildEditor(team){
+  if (!draft) draft = { azul: structuredClone(state.teams.azul.words), naranja: structuredClone(state.teams.naranja.words) };
+  editorTab = team;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === team));
+  const body = $('editorBody'); body.innerHTML = '';
+  draft[team].forEach((w, i) => {
+    const row = document.createElement('div');
+    row.className = 'qrow' + (!w.d || !w.w ? ' empty' : '');
+    row.innerHTML = `<div class="l">${LETTERS[i]}</div>
+      <select><option value="empieza">Con la</option><option value="contiene">Contiene la</option></select>
+      <input placeholder="Respuesta"><textarea rows="2" placeholder="Definición"></textarea>`;
+    const [sel, inp, ta] = row.querySelectorAll('select,input,textarea');
+    sel.value = w.t; inp.value = w.w; ta.value = w.d;
+    sel.onchange = () => w.t = sel.value;
+    inp.oninput = () => { w.w = inp.value.toUpperCase(); row.classList.toggle('empty', !w.d || !w.w); };
+    inp.onblur = () => inp.value = w.w;
+    ta.oninput = () => { w.d = ta.value; row.classList.toggle('empty', !w.d || !w.w); };
+    body.appendChild(row);
+  });
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => buildEditor(t.dataset.tab)));
+$('btnSaveQ').onclick = () => {
+  pushUndo(); state.teams.azul.words = draft.azul; state.teams.naranja.words = draft.naranja;
+  closeModal('editor'); commit();
+};
+$('btnDefaults').onclick = () => {
+  if (!confirm('¿Volver a las preguntas originales de ambos roscos? Se pierden las ediciones.')) return;
+  draft = { azul: defaultWords('azul'), naranja: defaultWords('naranja') }; buildEditor(editorTab);
+};
+
+/* settings */
+function fillSettings(){
+  $('nameAzul').value = state.teams.azul.name; $('nameNaranja').value = state.teams.naranja.name;
+  $('secAzul').value = state.teams.azul.seconds; $('secNaranja').value = state.teams.naranja.seconds;
+  $('starter').value = state.starter || 'azul'; $('soundSel').value = state.sound ? '1' : '0';
+}
+function readCfg(){
+  state.teams.azul.name = $('nameAzul').value.trim() || 'Equipo Azul';
+  state.teams.naranja.name = $('nameNaranja').value.trim() || 'Equipo Naranja';
+  state.teams.azul.seconds = Math.max(5, +$('secAzul').value || 150);
+  state.teams.naranja.seconds = Math.max(5, +$('secNaranja').value || 150);
+  state.starter = $('starter').value; state.sound = $('soundSel').value === '1';
+}
+$('btnSaveCfg').onclick = () => { readCfg(); closeModal('settings'); commit(); };
+$('btnApplyTime').onclick = () => {
+  readCfg(); pushUndo();
+  for (const t of TEAMS) state.teams[t].time = state.teams[t].seconds;
+  state.finished = false; closeModal('settings'); commit();
+};
+$('btnReset').onclick = () => {
+  if (!confirm('¿Reiniciar la partida? Se borra el progreso de ambos roscos (preguntas y nombres se mantienen).')) return;
+  readCfg(); pushUndo(); isClock = false; state = freshState(state); closeModal('settings');
+  save(); try { bc && bc.postMessage(state); } catch(e){} render();
+};
+$('btnExport').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'rosco-partida-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json';
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('btnImport').onclick = () => $('fileImport').click();
+$('fileImport').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s.teams || !s.teams.azul || !s.teams.naranja) throw 0;
+    pushUndo(); s.rev = (state.rev || 0) + 1; s.running = false; state = s; isClock = false;
+    closeModal('settings'); commit();
+  } catch(err){ alert('El archivo no es una partida válida.'); }
+  e.target.value = '';
+};
+
+/* ================= controls ================= */
+const ACTIONS = {
+  correct: () => mark('correct'), wrong: () => mark('wrong'), passed: () => mark('passed'),
+  play: togglePlay, undo, switch: switchTurn,
+  reveal: () => { state.showAnswer = !state.showAnswer; render(); },
+  full: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(),
+  openOverlay,
+};
+document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => { ACTIONS[b.dataset.act](); b.blur(); }));
+
+document.addEventListener('keydown', e => {
+  if (MODE === 'overlay') return;
+  if (anyModalOpen()){ if (e.key === 'Escape') document.querySelectorAll('.modal.open').forEach(m => closeModal(m.id)); return; }
+  if (e.target.matches('input,textarea,select')) return;
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space' || k === ' '){ e.preventDefault(); togglePlay(); }
+  else if (k === 'c' || k === 'enter') mark('correct');
+  else if (k === 'x') mark('wrong');
+  else if (k === 'p') mark('passed');
+  else if (k === 'r') ACTIONS.reveal();
+  else if (k === 'z'){ e.preventDefault(); undo(); }
+  else if (k === 't') switchTurn();
+  else if (k === 'f' && MODE === 'pantalla') ACTIONS.full();
+});
+window.addEventListener('resize', layout);
+window.addEventListener('beforeunload', () => { if (isClock) save(); });
+
+/* ================= boot ================= */
+state = readStored() || freshState();
+if (MODE !== 'overlay') state.running = false; // a reload pauses the clock
+buildStage();
+render();
+booted = true;
+layout();
+new ResizeObserver(fit).observe($('viewport'));
+if (MODE === 'overlay'){
+  ensureAudio();
+  if (!ac || ac.state !== 'running'){
+    const h = document.createElement('div'); h.className = 'soundhint'; h.textContent = '🔇 Clic acá para activar el sonido';
+    $('stage').appendChild(h);
+    const go = () => { ensureAudio(); setTimeout(() => { if (ac && ac.state === 'running') h.remove(); }, 100); };
+    document.addEventListener('click', go);
+  }
+}
+if (!readStored()) save();
+lastTick = performance.now();
+setInterval(tick, 100);
+</script>
+</body>
+</html>
