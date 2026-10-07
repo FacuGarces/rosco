@@ -6,403 +6,575 @@
 <title>El Rosco</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#f3f6ff; --muted:#93a0d6; --panel:#0e1536; --panel2:#151e48; --line:#26316c;
-    --chroma:#00ff00;
-    --team:#2f7bff; --team2:#0a36b0;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
-  body{background:#050817;color:var(--ink);font-family:Montserrat,system-ui,sans-serif;overflow:hidden}
-  button{font:inherit;color:inherit;cursor:pointer}
-  kbd{font:800 11px Montserrat;background:#0004;padding:2px 6px;border-radius:5px}
+/* =====================================================================
+   DESIGN TOKENS
+   ===================================================================== */
+:root{
+  --bg:#060914; --surface:#0c1226; --surface-2:#121a36; --surface-3:#1b2550;
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+  --ink:#F5F7FF; --ink-2:#C6CDE8; --muted:#8F9AC2;
+  --gold-1:#FFE08A; --gold-2:#FFB800;
+  --green:#22C55E; --red:#EF4444; --yellow:#FACC15;
+  --chroma:#00ff00;
+  --team-1:#6EA8FF; --team-2:#2563FF; --team-3:#0B2A8C;
+  --display:'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body:'Barlow', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+.ic{width:20px;height:20px;flex:none}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
 
-  /* ================= STAGE 1920×1080 ================= */
-  #viewport{position:fixed;inset:0;overflow:hidden}
-  .stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
-  .stage *{user-select:none}
+/* =====================================================================
+   STAGE — 1920×1080 broadcast canvas shared by every mode
+   ===================================================================== */
+#viewport{position:fixed;inset:0;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.stage *{user-select:none}
 
-  .bg{position:absolute;inset:0;
-    background:
-      radial-gradient(ellipse 900px 700px at 960px 450px, color-mix(in srgb,var(--team) 34%, transparent), transparent 70%),
-      repeating-conic-gradient(from 0deg at 960px 450px, rgba(255,255,255,.035) 0 5deg, transparent 5deg 10deg),
-      radial-gradient(ellipse 1400px 500px at 960px 1150px, color-mix(in srgb,var(--team) 22%, transparent), transparent 70%),
-      linear-gradient(180deg,#04071a 0%,#0a1338 55%,#04061a 100%);
-    -webkit-mask:radial-gradient(circle at 960px 450px, transparent 0 314px, #000 316px);
-            mask:radial-gradient(circle at 960px 450px, transparent 0 314px, #000 316px);
-    transition:background .6s}
-  .hole{position:absolute;left:960px;top:450px;width:632px;height:632px;margin:-316px 0 0 -316px;border-radius:50%}
-  .hole.studio{background:radial-gradient(circle at 50% 40%, color-mix(in srgb,var(--team) 30%, #0b1236), #050817 75%)}
+.bg{position:absolute;inset:0;
+  background:
+    radial-gradient(900px 660px at 960px 455px, color-mix(in srgb,var(--team-2) 30%, transparent), transparent 70%),
+    radial-gradient(1300px 420px at 960px 1180px, color-mix(in srgb,var(--team-2) 20%, transparent), transparent 70%),
+    linear-gradient(180deg,#04070f 0%,#0a1130 52%,#03050c 100%);
+  -webkit-mask:radial-gradient(circle at 960px 455px, transparent 0 311px, #000 313px);
+          mask:radial-gradient(circle at 960px 455px, transparent 0 311px, #000 313px)}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask:radial-gradient(ellipse 62% 70% at 50% 42%, #000 20%, transparent 78%);
+          mask:radial-gradient(ellipse 62% 70% at 50% 42%, #000 20%, transparent 78%)}
+.hole{position:absolute;left:960px;top:455px;width:626px;height:626px;margin:-313px 0 0 -313px;border-radius:50%}
+.hole.studio{background:radial-gradient(circle at 50% 38%, color-mix(in srgb,var(--team-3) 70%, #0b1236), #050816 78%)}
 
-  .band{position:absolute;left:960px;top:450px;width:840px;height:840px;margin:-420px 0 0 -420px;border-radius:50%;
-    background:radial-gradient(circle, transparent 0 315px, #060a1e 317px 411px, transparent 413px);
-    box-shadow:0 0 0 4px color-mix(in srgb,var(--team) 70%, white), 0 0 60px 8px color-mix(in srgb,var(--team) 55%, transparent);
-    transition:box-shadow .5s}
-  .band::after{content:"";position:absolute;inset:102px;border-radius:50%;
-    box-shadow:0 0 0 4px color-mix(in srgb,var(--team) 70%, white), 0 0 40px 4px color-mix(in srgb,var(--team) 55%, transparent);transition:box-shadow .5s}
+/* ring track */
+.track{position:absolute;left:960px;top:455px;width:846px;height:846px;margin:-423px 0 0 -423px;border-radius:50%;
+  background:radial-gradient(circle, transparent 0 312px, #070b1c 313px 421px, transparent 422px);
+  box-shadow:0 0 90px 4px color-mix(in srgb,var(--team-2) 45%, transparent);transition:box-shadow .5s}
+.track::before{content:"";position:absolute;inset:0;border-radius:50%;padding:4px;
+  background:conic-gradient(from 200deg, var(--team-1), #ffffff 12%, var(--team-2) 30%, var(--team-3) 55%, var(--team-1) 80%, #ffffff 90%, var(--team-1));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+          mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.track::after{content:"";position:absolute;inset:108px;border-radius:50%;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--team-1) 85%, white), 0 0 34px 4px color-mix(in srgb,var(--team-2) 60%, transparent), inset 0 0 30px color-mix(in srgb,var(--team-2) 35%, transparent)}
 
-  .ring{position:absolute;inset:0}
-  .ring.swap{animation:swap .6s cubic-bezier(.2,.9,.3,1.15)}
-  @keyframes swap{0%{transform:rotate(-120deg) scale(.8);opacity:0}100%{transform:none;opacity:1}}
-  .ring.shake{animation:shake .45s}
-  @keyframes shake{20%,60%{translate:-14px 0}40%,80%{translate:14px 0}}
-  .ring { transform-origin:960px 450px }
+.ring{position:absolute;inset:0;transform-origin:960px 455px}
+.ring.swap{animation:swap .65s cubic-bezier(.16,1,.3,1)}
+@keyframes swap{0%{transform:rotate(-45deg) scale(.88);opacity:0}100%{transform:none;opacity:1}}
+.ring.shake{animation:shake .42s ease-in-out}
+@keyframes shake{20%,60%{translate:-12px 0}40%,80%{translate:12px 0}}
 
-  .ball{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;
-    display:grid;place-items:center;font:900 40px/1 Montserrat;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45);
-    --b1:#4b95ff; --b2:#0a36b0;
-    background:
-      radial-gradient(circle at 33% 26%, rgba(255,255,255,.85) 0 5%, rgba(255,255,255,0) 30%),
-      radial-gradient(circle at 50% 58%, var(--b1) 0%, var(--b2) 80%);
-    box-shadow:0 8px 18px rgba(0,0,0,.55), inset 0 -9px 14px rgba(0,0,0,.35), 0 0 0 3px rgba(255,255,255,.22);
-    transition:transform .35s cubic-bezier(.3,1.7,.5,1), box-shadow .3s;cursor:pointer}
-  .t-naranja .ball{--b1:#ffa24d; --b2:#c24a00}
-  .ball.correct{--b1:#61f59a !important; --b2:#08853a !important}
-  .ball.wrong{--b1:#ff6f6f !important; --b2:#9e1212 !important}
-  .ball.passed{--b1:#ffe46b !important; --b2:#cf9600 !important; color:#3b2a00; text-shadow:none}
-  .ball.current{transform:scale(1.3);z-index:5;
-    box-shadow:0 0 0 5px #fff, 0 0 40px 10px rgba(255,255,255,.55), 0 10px 20px rgba(0,0,0,.6);animation:glow 1.2s ease-in-out infinite}
-  @keyframes glow{50%{box-shadow:0 0 0 7px #fff, 0 0 60px 18px rgba(255,255,255,.75), 0 10px 20px rgba(0,0,0,.6)}}
-  .ball.pop{animation:pop .55s cubic-bezier(.3,1.8,.5,1)}
-  @keyframes pop{0%{transform:scale(1.3)}40%{transform:scale(1.7)}100%{transform:scale(1)}}
+/* letter balls */
+.ball{position:absolute;width:86px;height:86px;margin:-43px 0 0 -43px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  --b1:#6EA8FF; --b2:#2563FF; --b3:#0B2A8C;
+  background:radial-gradient(115% 115% at 50% 6%, var(--b1) 0%, var(--b2) 50%, var(--b3) 100%);
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.55), inset 0 -9px 14px rgba(0,0,0,.32), 0 0 0 2px rgba(255,255,255,.16), 0 10px 20px rgba(0,0,0,.55);
+  color:#fff;font:800 50px/1 var(--display);text-shadow:0 2px 8px rgba(0,0,0,.3);
+  transition:transform .35s cubic-bezier(.2,.9,.25,1.25), box-shadow .3s}
+.ball::before{content:"";position:absolute;left:15%;right:15%;top:6%;height:40%;border-radius:50% 50% 44% 44%;
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0));pointer-events:none}
+.ball .l{position:relative;top:1px}
+.ball .mk{position:absolute;right:-7px;bottom:-7px;width:32px;height:32px;border-radius:50%;display:none;place-items:center;
+  background:#060a1a;box-shadow:0 0 0 2px currentColor, 0 4px 10px rgba(0,0,0,.5)}
+.ball .mk .ic{width:17px;height:17px;stroke-width:3.2}
+.t-naranja .ball{--b1:#FFB36B; --b2:#FF7A1A; --b3:#A83E00}
+.ball.correct{--b1:#86F2B0 !important; --b2:#1FBF5F !important; --b3:#0A6B33 !important}
+.ball.wrong{--b1:#FF9292 !important; --b2:#E53935 !important; --b3:#7F1010 !important}
+.ball.passed{--b1:#FFF1A6 !important; --b2:#FACC15 !important; --b3:#A87900 !important; color:#2A1F00; text-shadow:none}
+.ball.correct .mk{display:grid;color:#3BE07F} .ball.wrong .mk{display:grid;color:#FF6B6B} .ball.passed .mk{display:grid;color:#FFD84A}
+.ball.current{transform:scale(1.3);z-index:5;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.55), inset 0 -9px 14px rgba(0,0,0,.32), 0 0 0 4px #fff, 0 0 44px 10px color-mix(in srgb,var(--b2) 75%, transparent), 0 12px 24px rgba(0,0,0,.6)}
+.ball.current::after{content:"";position:absolute;inset:-14px;border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0 52%, rgba(255,255,255,.95) 82%, transparent 100%);
+  -webkit-mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 4px));
+          mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 4px));
+  animation:spin 1.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ball.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(1.3)}45%{transform:scale(1.6)}100%{transform:scale(1)}}
 
-  /* center (pantalla / control) */
-  .center-info{position:absolute;left:960px;top:450px;width:600px;height:600px;margin:-300px 0 0 -300px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
-  .ci-team{font:900 30px Montserrat;letter-spacing:5px;text-transform:uppercase;color:color-mix(in srgb,var(--team) 60%, white)}
-  .ci-letter{width:250px;height:250px;border-radius:50%;display:grid;place-items:center;font:900 160px/1 Montserrat;color:#fff;
-    text-shadow:0 6px 12px rgba(0,0,0,.4);
-    background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, var(--team) 0%, var(--team2) 80%);
-    box-shadow:0 0 0 6px #fff, 0 0 70px 10px color-mix(in srgb,var(--team) 70%, transparent), inset 0 -18px 30px rgba(0,0,0,.35)}
-  .ci-letter.passed{background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, #ffe46b 0%, #cf9600 80%);color:#3b2a00;text-shadow:none}
-  .ci-rule{font:900 34px Montserrat;letter-spacing:3px;text-transform:uppercase}
+.flashring{position:absolute;left:960px;top:455px;width:846px;height:846px;margin:-423px 0 0 -423px;border-radius:50%;pointer-events:none;opacity:0}
+.flashring.go{animation:fr .7s ease-out}
+@keyframes fr{0%{opacity:1;box-shadow:0 0 0 10px var(--fc), 0 0 120px 40px var(--fc)}100%{opacity:0;box-shadow:0 0 0 70px transparent, 0 0 220px 90px transparent}}
 
-  /* team cards */
-  .tcard{position:absolute;top:215px;width:390px;padding:30px 30px 26px;border-radius:34px;text-align:center;
-    background:linear-gradient(180deg, #10183e, #060a1e);
-    border:3px solid color-mix(in srgb,var(--tc) 55%, transparent);
-    box-shadow:0 20px 50px rgba(0,0,0,.5);transition:transform .4s, opacity .4s, box-shadow .4s}
-  .tcard.left{left:70px} .tcard.right{left:1460px}
-  .tcard.on{transform:scale(1.05);box-shadow:0 0 0 3px var(--tc), 0 0 60px 6px color-mix(in srgb,var(--tc) 55%, transparent), 0 20px 50px rgba(0,0,0,.5)}
-  .tcard.off{filter:brightness(.55) saturate(.6);transform:scale(.94)}
-  .tc-name{font:900 34px/1.1 Montserrat;text-transform:uppercase;letter-spacing:2px;color:color-mix(in srgb,var(--tc) 65%, white);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tc-live{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font:800 18px Montserrat;letter-spacing:3px;padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--muted)}
-  .tc-live i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
-  .tcard.on .tc-live{color:#fff;background:color-mix(in srgb,var(--tc) 45%, transparent)}
-  .tcard.running .tc-live i{background:#ff3b3b;animation:blink 1s steps(2) infinite}
-  .tc-clock{font:900 170px/1 Montserrat;font-variant-numeric:tabular-nums;letter-spacing:-4px;margin:14px 0 0;text-shadow:0 8px 24px rgba(0,0,0,.5)}
-  .tc-clock.low{color:#ff4b4b;animation:blink .8s steps(2) infinite}
-  .tc-clock.zero{color:#5b6699}
-  .tc-sub{font:800 18px Montserrat;letter-spacing:6px;color:var(--muted);margin-top:-4px}
-  .tc-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
-  .tc-stat{background:rgba(255,255,255,.05);border-radius:20px;padding:12px 6px}
-  .tc-stat b{display:block;font:900 64px/1 Montserrat}
-  .tc-stat small{font:800 15px Montserrat;letter-spacing:3px;color:var(--muted)}
-  .tc-stat.ok b{color:#4fec8a} .tc-stat.err b{color:#ff5a5a}
-  .tc-dots{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;margin-top:20px;padding:0 4px}
-  .tc-dots span{aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--tc) 70%, #000)}
-  .tc-dots span.correct{background:#3ee07a} .tc-dots span.wrong{background:#ff4b4b} .tc-dots span.passed{background:#ffd21f}
-  .tc-badge{margin-top:16px;font:900 20px Montserrat;letter-spacing:2px;color:#ffd21f;min-height:24px}
-  @keyframes blink{50%{opacity:.35}}
+/* center (pantalla / preview without camera) */
+.center-info{position:absolute;left:960px;top:455px;width:560px;height:560px;margin:-280px 0 0 -280px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.ci-team{font:800 italic 30px/1 var(--display);letter-spacing:4px;text-transform:uppercase;color:color-mix(in srgb,var(--team-1) 70%, white)}
+.ci-ball{width:250px;height:250px;border-radius:50%;display:grid;place-items:center;position:relative;color:#fff;font:800 180px/1 var(--display);
+  background:radial-gradient(115% 115% at 50% 6%, var(--team-1) 0%, var(--team-2) 50%, var(--team-3) 100%);
+  box-shadow:inset 0 4px 2px rgba(255,255,255,.5), inset 0 -22px 34px rgba(0,0,0,.32), 0 0 0 6px #fff, 0 0 80px 14px color-mix(in srgb,var(--team-2) 65%, transparent)}
+.ci-ball::before{content:"";position:absolute;left:16%;right:16%;top:6%;height:38%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0))}
+.ci-ball span{position:relative;top:6px}
+.ci-ball.passed{background:radial-gradient(115% 115% at 50% 6%, #FFF1A6 0%, #FACC15 50%, #A87900 100%);color:#2A1F00}
+.ci-rule{font:800 italic 40px/1 var(--display);letter-spacing:2px;text-transform:uppercase}
 
-  /* definition bar */
-  .defbar{position:absolute;left:230px;top:892px;width:1460px;height:160px;display:flex;align-items:center;gap:30px;padding:0 44px 0 26px;
-    border-radius:80px;background:linear-gradient(180deg, #10183e, #060a1e);
-    box-shadow:0 0 0 3px color-mix(in srgb,var(--team) 70%, white), 0 0 50px 4px color-mix(in srgb,var(--team) 45%, transparent), 0 20px 40px rgba(0,0,0,.5);transition:box-shadow .5s}
-  .db-ball{flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;font:900 64px/1 Montserrat;color:#fff;
-    background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, var(--team) 0%, var(--team2) 80%);
-    box-shadow:0 0 0 4px #fff, inset 0 -10px 16px rgba(0,0,0,.35)}
-  .db-ball.passed{background:radial-gradient(circle at 33% 26%, rgba(255,255,255,.8) 0 5%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 58%, #ffe46b 0%, #cf9600 80%);color:#3b2a00}
-  .db-text{flex:1;min-width:0}
-  .db-rule{font:900 26px Montserrat;letter-spacing:4px;text-transform:uppercase;color:color-mix(in srgb,var(--team) 55%, white)}
-  .db-rule em{font-style:normal;color:#ffd21f;margin-left:12px}
-  .db-def{font:700 36px/1.22 Montserrat;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .db-def.s{font-size:31px} .db-def.xs{font-size:27px}
-  .db-def.missing{color:#ffd21f;font-style:italic}
+/* brand + turn chip */
+.brand{position:absolute;left:64px;top:44px;display:flex;align-items:flex-end;gap:10px;line-height:1}
+.brand .el{font:800 italic 34px/1 var(--display);letter-spacing:2px;color:#fff;padding-bottom:9px}
+.brand .ro{font:900 italic 78px/1 var(--display);letter-spacing:1px;
+  background:linear-gradient(180deg,var(--gold-1),var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 14px rgba(255,184,0,.35))}
+.turnchip{position:absolute;right:64px;top:62px;height:64px;display:flex;align-items:center;gap:14px;padding:0 30px 0 40px;
+  background:linear-gradient(100deg,var(--team-2),var(--team-3));clip-path:polygon(22px 0,100% 0,100% 100%,0 100%);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);transition:background .5s}
+.turnchip small{font:700 16px var(--body);letter-spacing:3px;opacity:.85}
+.turnchip span{font:800 italic 34px/1 var(--display);text-transform:uppercase;letter-spacing:.5px}
+.turnchip i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.55)}
+.turnchip.running i{background:#ff3b3b;animation:live 1.3s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(255,59,59,.7)}70%{box-shadow:0 0 0 10px rgba(255,59,59,0)}100%{box-shadow:0 0 0 0 rgba(255,59,59,0)}}
 
-  /* banners + final */
-  .banner{position:absolute;left:960px;top:450px;transform:translate(-50%,-50%) scale(0);font:italic 900 128px/1 Montserrat;white-space:nowrap;
-    letter-spacing:-2px;-webkit-text-stroke:6px #1a1200;paint-order:stroke fill;text-shadow:0 10px 0 rgba(0,0,0,.35);pointer-events:none;z-index:20;opacity:0}
-  .banner.go{animation:banner 1.5s cubic-bezier(.2,1.4,.4,1) forwards}
-  @keyframes banner{0%{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}18%{transform:translate(-50%,-50%) scale(1.08) rotate(-4deg);opacity:1}
-    75%{transform:translate(-50%,-50%) scale(1) rotate(-4deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1.25) rotate(-4deg);opacity:0}}
-  .flashring{position:absolute;left:960px;top:450px;width:840px;height:840px;margin:-420px 0 0 -420px;border-radius:50%;pointer-events:none;opacity:0}
-  .flashring.go{animation:fr .7s ease-out}
-  @keyframes fr{0%{opacity:1;box-shadow:0 0 0 10px var(--fc), 0 0 120px 40px var(--fc)}100%{opacity:0;box-shadow:0 0 0 60px transparent, 0 0 200px 80px transparent}}
+/* team cards */
+.tcard{position:absolute;top:184px;width:388px;border-radius:22px;overflow:hidden;
+  background:linear-gradient(180deg,#121a38,#080d20);box-shadow:0 0 0 1px rgba(255,255,255,.09), 0 24px 60px rgba(0,0,0,.55);
+  transition:transform .4s cubic-bezier(.16,1,.3,1), filter .4s, box-shadow .4s}
+.tcard.left{left:64px} .tcard.right{left:1468px}
+.tcard.on{transform:scale(1.04);box-shadow:0 0 0 2px var(--c1), 0 0 70px color-mix(in srgb,var(--c2) 50%, transparent), 0 24px 60px rgba(0,0,0,.55)}
+.tcard.off{filter:brightness(.55) saturate(.5);transform:scale(.96)}
+.tc-head{position:relative;height:74px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px 0 26px;
+  background:linear-gradient(100deg,var(--c2),var(--c3))}
+.tc-head::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 58%,rgba(255,255,255,.13) 58% 66%,transparent 66%);pointer-events:none}
+.tc-name{font:800 italic 36px/1 var(--display);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tc-state{flex:none;display:flex;align-items:center;gap:8px;font:700 14px var(--body);letter-spacing:2px;padding:7px 11px;border-radius:9px;background:rgba(0,0,0,.3)}
+.tc-state i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.55)}
+.tcard.running .tc-state i{background:#ff3b3b;animation:live 1.3s infinite}
+.tc-body{padding:14px 26px 22px}
+.tc-clock{font:800 206px/.86 var(--display);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:-3px;margin-top:8px;text-shadow:0 8px 30px rgba(0,0,0,.45)}
+.tc-clock.low{color:#FF4D4D;animation:blink .9s steps(2) infinite}
+.tc-clock.zero{color:#4a5480}
+@keyframes blink{50%{opacity:.4}}
+.tc-unit{text-align:center;font:700 15px var(--body);letter-spacing:7px;color:var(--muted);margin-top:6px}
+.tc-bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);margin:16px 0 18px;overflow:hidden}
+.tc-bar b{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--c2),var(--c1));transition:width .4s linear}
+.tc-bar.low b{background:linear-gradient(90deg,#b91c1c,#ff5a5a)}
+.tc-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tc-stat{padding:12px 0 10px;text-align:center}
+.tc-stat + .tc-stat{border-left:1px solid var(--line)}
+.tc-stat b{display:block;font:800 56px/1 var(--display);font-variant-numeric:tabular-nums}
+.tc-stat small{display:block;margin-top:4px;font:700 13px var(--body);letter-spacing:2px;color:var(--muted)}
+.tc-stat.ok b{color:#3BE07F} .tc-stat.err b{color:#FF6060}
+.tc-seg{display:grid;grid-template-columns:repeat(27,1fr);gap:3px;margin-top:18px}
+.tc-seg span{height:14px;border-radius:3px;background:color-mix(in srgb,var(--c2) 40%, #0b1022)}
+.tc-seg span.correct{background:#22C55E} .tc-seg span.wrong{background:#EF4444} .tc-seg span.passed{background:#FACC15}
+.tc-flag{height:34px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;font:800 italic 22px/1 var(--display);letter-spacing:1px;color:var(--gold-1)}
+.tc-flag .ic{width:22px;height:22px}
+.tc-flag:empty{display:none}
 
-  .final{position:absolute;left:960px;top:450px;width:1000px;transform:translate(-50%,-50%);text-align:center;padding:40px 50px 46px;border-radius:44px;z-index:30;
-    background:linear-gradient(180deg, rgba(16,24,62,.97), rgba(6,10,30,.97));box-shadow:0 0 0 4px #ffd21f, 0 0 90px 10px rgba(255,210,31,.4), 0 30px 80px rgba(0,0,0,.7);
-    display:none}
-  .final.show{display:block;animation:swap .7s cubic-bezier(.2,.9,.3,1.15)}
-  .final h1{margin:0;font:italic 900 86px/1.05 Montserrat;color:#ffd21f;-webkit-text-stroke:3px #1a1200;paint-order:stroke fill}
-  .final .sub{font:800 24px Montserrat;color:var(--muted);letter-spacing:4px;margin-top:6px}
-  .final .sc{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
-  .final .sc div{border-radius:28px;padding:20px;background:rgba(255,255,255,.05);border:3px solid var(--tc)}
-  .final .sc h3{margin:0;font:900 30px Montserrat;text-transform:uppercase;color:color-mix(in srgb,var(--tc) 60%, white)}
-  .final .sc b{display:block;font:900 110px/1 Montserrat;color:#4fec8a}
-  .final .sc p{margin:4px 0 0;font:800 22px Montserrat;color:#ff6b6b}
+/* lower third */
+.lt{position:absolute;left:290px;top:900px;width:1340px;height:134px;display:flex;border-radius:20px;overflow:hidden;
+  filter:drop-shadow(0 20px 36px rgba(0,0,0,.55))}
+.lt-tab{position:relative;z-index:2;flex:none;width:286px;display:flex;align-items:center;gap:10px;padding:0 46px 0 28px;
+  background:linear-gradient(110deg,var(--team-2),var(--team-3));clip-path:polygon(0 0,100% 0,calc(100% - 38px) 100%,0 100%);transition:background .5s}
+.lt-tab.passed{background:linear-gradient(110deg,#FACC15,#A87900);color:#2A1F00}
+.lt-rule{font:800 italic 30px/1 var(--display);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.lt-letter{margin-left:auto;font:900 108px/1 var(--display);position:relative;top:4px}
+.lt-body{flex:1;min-width:0;margin-left:-38px;padding:0 40px 0 76px;display:flex;align-items:center;gap:24px;
+  background:linear-gradient(180deg,#131c3c,#0a1026);box-shadow:inset 0 3px 0 color-mix(in srgb,var(--team-1) 80%, transparent)}
+.lt-def{flex:1;min-width:0;font:600 38px/1.18 var(--body);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lt-def.s{font-size:33px} .lt-def.xs{font-size:29px}
+.lt-def.missing{color:var(--yellow);font-style:italic}
+.lt-passed{flex:none;display:none;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:var(--yellow);color:#2A1F00;font:800 italic 24px/1 var(--display);letter-spacing:1px}
+.lt-passed.show{display:flex}
 
-  .soundhint{position:absolute;left:24px;top:24px;font:800 20px Montserrat;background:#000c;padding:10px 16px;border-radius:12px;z-index:40;cursor:pointer}
+/* banners */
+.banner{position:absolute;left:960px;top:455px;width:1200px;height:156px;margin:-78px 0 0 -600px;z-index:20;pointer-events:none;opacity:0}
+.banner .strip{position:absolute;inset:0;background:var(--bc);transform:skewX(-14deg);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.banner .strip::before,.banner .strip::after{content:"";position:absolute;left:4%;right:4%;height:6px;background:var(--bc);opacity:.6}
+.banner .strip::before{top:-18px} .banner .strip::after{bottom:-18px}
+.banner .txt{position:relative;height:100%;display:grid;place-items:center;font:900 italic 134px/1 var(--display);letter-spacing:3px;color:var(--bt)}
+.banner.go{animation:bn 1.6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes bn{0%{opacity:0;transform:scaleX(.15)}14%{opacity:1;transform:scaleX(1.03)}22%{transform:scaleX(1)}80%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1.08) translateX(80px)}}
 
-  /* ---------- background modes ---------- */
-  body.mode-overlay .center-info{display:none}
-  body.f-flotante .bg{display:none}
-  body.mode-overlay .hole{background:var(--chroma)}
-  body.mode-overlay.f-flotante{background:var(--chroma)}
-  body.mode-overlay.f-flotante .hole{background:transparent}
-  body.alpha, body.alpha.f-flotante{background:transparent !important}
-  body.alpha .hole{background:transparent !important}
+/* final card */
+.final{position:absolute;left:960px;top:455px;width:990px;transform:translate(-50%,-50%);z-index:30;display:none;border-radius:26px;overflow:hidden;
+  background:linear-gradient(180deg,#131c3c,#080d20);box-shadow:0 0 0 2px var(--gold-2), 0 0 100px rgba(255,184,0,.32), 0 40px 100px rgba(0,0,0,.7)}
+.final.show{display:block;animation:swap .7s cubic-bezier(.16,1,.3,1)}
+.fn-head{height:66px;display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(90deg,var(--gold-2),var(--gold-1),var(--gold-2));
+  color:#1d1400;font:800 italic 32px/1 var(--display);letter-spacing:5px}
+.fn-head .ic{width:28px;height:28px}
+.fn-win{padding:28px 40px 6px;text-align:center;font:900 italic 108px/1 var(--display);text-transform:uppercase}
+.fn-sub{text-align:center;color:var(--muted);font:700 20px var(--body);letter-spacing:3px}
+.fn-scores{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:28px 40px 40px}
+.fn-team{position:relative;border-radius:18px;overflow:hidden;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line);text-align:center;padding:24px 16px 20px}
+.fn-team::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,var(--c2),var(--c1))}
+.fn-team.win{box-shadow:inset 0 0 0 2px var(--gold-2)}
+.fn-team h3{margin:6px 0 0;font:800 italic 32px/1 var(--display);text-transform:uppercase;color:color-mix(in srgb,var(--c1) 70%, white)}
+.fn-team b{display:block;font:800 140px/1 var(--display);color:#3BE07F;margin-top:6px}
+.fn-team small{display:block;font:700 15px var(--body);letter-spacing:3px;color:var(--muted)}
+.fn-team p{margin:10px 0 0;font:700 20px var(--body);color:#FF7A7A}
 
-  /* ================= HOST BAR (pantalla) ================= */
-  .hostbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;padding:10px 14px;flex-wrap:wrap;
-    background:#070b1fee;border-top:1px solid var(--line);z-index:10}
-  .hostbar[hidden]{display:none}
-  .hb-btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;
-    box-shadow:0 3px 0 rgba(0,0,0,.4)}
-  .hb-btn:active{transform:translateY(2px);box-shadow:none}
-  .hb-btn:disabled{opacity:.35;cursor:not-allowed}
-  .g{background:#22c55e;color:#03230e} .y{background:#ffd21f;color:#2c2000} .r{background:#ef4444} .w{background:#fff;color:#0a0f25}
-  .w.running{background:#ffb3b3}
-  .gh{background:var(--panel2);border:1px solid var(--line);box-shadow:none}
-  .hb-ans{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:#0008;border:1px dashed var(--line);border-radius:12px;padding:8px 12px}
-  .hb-ans span{font-weight:900;letter-spacing:1px;transition:filter .2s}
-  .hb-ans.hidden span{filter:blur(8px)}
-  .hb-ans button{margin-left:auto;background:#fff1;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px;font-weight:700}
-  .hb-sep{width:1px;height:30px;background:var(--line)}
-  .hb-tools{display:flex;gap:6px}
-  @media (max-width:900px){ .hb-btn{padding:9px 10px;font-size:13px} .hb-btn kbd{display:none} }
+.soundhint{position:absolute;left:64px;bottom:40px;display:flex;align-items:center;gap:10px;font:700 20px var(--body);background:rgba(0,0,0,.8);padding:12px 18px;border-radius:12px;z-index:40;cursor:pointer}
 
-  /* ================= CONTROL MODE ================= */
-  body.mode-control{overflow:auto}
-  body.mode-control #viewport{position:relative;inset:auto;width:100%;aspect-ratio:16/9;border-radius:14px;border:1px solid var(--line)}
-  .control{display:none;max-width:1300px;margin:0 auto;padding:14px 16px 30px;gap:14px}
-  body.mode-control .control{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
-  @media (max-width:900px){ body.mode-control .control{grid-template-columns:1fr} }
-  .c-head{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .c-title{font:900 20px Montserrat;letter-spacing:1px} .c-title span{color:#ffd21f}
-  .c-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
-  .c-card.cur{border-top:5px solid var(--team)}
-  .c-turn{display:flex;align-items:center;gap:10px;font:900 16px Montserrat;text-transform:uppercase;letter-spacing:1px}
-  .c-turn i{width:12px;height:12px;border-radius:50%;background:var(--team)}
-  .c-turn.running i{background:#ff3b3b;animation:blink 1s steps(2) infinite}
-  .c-letter{display:flex;gap:14px;align-items:center}
-  .c-letter .db-ball{width:70px;height:70px;font-size:38px}
-  .c-rule{font:900 20px Montserrat;text-transform:uppercase}
-  .c-def{font:700 19px/1.4 Montserrat}
-  .c-def.missing{color:#ffd21f;font-style:italic}
-  .c-ans{background:#000a;border-radius:12px;padding:12px 14px;font:900 26px Montserrat;letter-spacing:1px;color:#ffd21f}
-  .c-ans small{display:block;font:800 11px Montserrat;color:var(--muted);letter-spacing:2px}
-  .c-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .c-actions .hb-btn, .c-row .hb-btn{justify-content:center;flex-direction:column;gap:3px;padding:16px 8px;font-size:16px}
-  .c-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
-  .c-team{border-left:5px solid var(--tc)}
-  .c-team-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-  .c-team-h b{font:900 18px Montserrat;text-transform:uppercase;color:color-mix(in srgb,var(--tc) 65%, white)}
-  .c-team-h span{font:900 34px Montserrat;font-variant-numeric:tabular-nums}
-  .c-team-s{font-size:13px;color:var(--muted);font-weight:700}
-  .c-team-s em{font-style:normal;color:#4fec8a} .c-team-s strong{color:#ff6b6b}
-  .chips{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
-  .chip{aspect-ratio:1;border-radius:50%;border:none;padding:0;font:900 12px Montserrat;color:#fff;background:color-mix(in srgb,var(--tc) 75%, #000)}
-  .chip.correct{background:#1fb457} .chip.wrong{background:#d93636} .chip.passed{background:#ffd21f;color:#2c2000}
-  .chip.cur{outline:3px solid #fff;outline-offset:1px}
-  .c-tools{display:flex;gap:6px;flex-wrap:wrap}
-  .net{font:700 12px Montserrat;letter-spacing:0;color:var(--muted);margin-left:8px;padding:3px 8px;border-radius:99px;background:#fff1;vertical-align:middle}
-  .net.ok{color:#4fec8a} .net.off{color:#ff6b6b}
+/* background modes */
+body.mode-overlay .center-info{display:none}
+body.f-flotante .bg{display:none}
+body.mode-overlay .hole{background:var(--chroma)}
+body.mode-overlay.f-flotante{background:var(--chroma)}
+body.mode-overlay.f-flotante .hole{background:transparent}
+body.alpha, body.alpha.f-flotante{background:transparent !important}
+body.alpha .hole{background:transparent !important}
 
-  /* ================= MODALS ================= */
-  .modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
-  .modal.open{display:flex}
-  .sheet{background:#0b1230;border:1px solid var(--line);border-radius:18px;max-width:900px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-  .sheet header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
-  .sheet header h2{margin:0;font:900 20px Montserrat}
-  .sheet .body{padding:16px 18px;overflow:auto}
-  .sheet footer{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-  .sheet p,.sheet li{line-height:1.6;color:#d7ddf7;font-size:15px}
-  .sheet h3{margin:18px 0 4px;font:900 16px Montserrat;color:#ffd21f}
-  .tabs{display:flex;gap:6px}
-  .tab{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:800;font-size:13px}
-  .tab.on.azul{background:#1f6bff} .tab.on.naranja{background:#ff7a1a}
-  .qrow{display:grid;grid-template-columns:36px 120px 190px 1fr;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid #ffffff10}
-  @media (max-width:700px){ .qrow{grid-template-columns:36px 1fr} .qrow textarea{grid-column:1 / -1} .qrow input{grid-column:2} }
-  .qrow .l{font:900 22px Montserrat;text-align:center;padding-top:6px}
-  .qrow.empty .l{color:#ffd21f}
-  input,select,textarea{background:#060b22;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;font-size:14px;width:100%}
-  textarea{resize:vertical;min-height:40px}
-  label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800;color:var(--muted);margin-bottom:12px}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:600px){.grid2{grid-template-columns:1fr}}
-  .pill{border:none;border-radius:10px;padding:9px 14px;font-weight:800;font-size:14px}
-  .pill.primary{background:#ffd21f;color:#2a1f00} .pill.danger{background:#ef4444} .pill.plain{background:var(--panel2);border:1px solid var(--line)}
-  .urlrow{display:flex;gap:6px;margin:6px 0 4px}
-  .urlrow input{font:600 13px ui-monospace,monospace}
+/* =====================================================================
+   BUTTONS (host UI)
+   ===================================================================== */
+.btn{--bg:var(--surface-3);--fg:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 18px;
+  border:0;border-radius:14px;background:var(--bg);color:var(--fg);font:700 16px/1 var(--body);cursor:pointer;white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 rgba(0,0,0,.35);transition:filter .15s, transform .1s, box-shadow .15s}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.38;cursor:not-allowed;filter:none;transform:none}
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible,.ball:focus-visible{outline:3px solid var(--gold-2);outline-offset:3px}
+.btn kbd{font:700 12px/1 var(--body);padding:4px 7px;border-radius:6px;background:rgba(0,0,0,.22)}
+.btn-ok{--bg:linear-gradient(180deg,#34DE74,#16A34A);--fg:#03230f}
+.btn-pass{--bg:linear-gradient(180deg,#FFDC55,#EAB308);--fg:#2A1F00}
+.btn-err{--bg:linear-gradient(180deg,#F87171,#DC2626);--fg:#fff}
+.btn-play{--bg:linear-gradient(180deg,#ffffff,#dde4ff);--fg:#0a0f25}
+.btn-play.running{--bg:linear-gradient(180deg,#FFE4E4,#FCA5A5);--fg:#4a0909}
+.btn-primary{--bg:linear-gradient(180deg,var(--gold-1),var(--gold-2));--fg:#241900}
+.btn-ghost{--bg:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn-danger{--bg:rgba(239,68,68,.12);--fg:#FCA5A5;box-shadow:inset 0 0 0 1px rgba(239,68,68,.45)}
+.btn-icon{width:48px;padding:0}
+.btn-lg{min-height:60px;font-size:18px;padding:0 22px}
+.btn-xl{min-height:104px;flex-direction:column;gap:8px;border-radius:18px;font:800 italic 26px/1 var(--display);letter-spacing:.5px}
+.btn-xl .ic{width:32px;height:32px;stroke-width:2.6}
+.btn-xl kbd{font-style:normal}
+
+/* =====================================================================
+   HOST BAR (pantalla)
+   ===================================================================== */
+.hostbar{position:fixed;left:12px;right:12px;bottom:12px;display:flex;gap:8px;align-items:center;padding:10px;flex-wrap:wrap;z-index:20;border-radius:18px;
+  background:rgba(10,14,32,.94);box-shadow:0 0 0 1px var(--line-2), 0 20px 40px rgba(0,0,0,.5)}
+.hostbar[hidden]{display:none}
+.hb-sep{width:1px;align-self:stretch;margin:4px 4px;background:var(--line-2)}
+.hb-ans{flex:1;min-width:220px;display:flex;align-items:center;gap:12px;min-height:48px;padding:0 6px 0 14px;border-radius:14px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line)}
+.hb-ans small{font:700 11px var(--body);letter-spacing:2px;color:var(--muted)}
+.hb-ans span{font:800 24px/1 var(--display);letter-spacing:1px;color:var(--gold-1);transition:filter .2s}
+.hb-ans.hidden span{filter:blur(9px)}
+.hb-ans .btn{margin-left:auto;min-height:38px;width:38px}
+@media (max-width:1100px){ .hostbar .btn kbd{display:none} .hostbar .btn-lg{min-height:52px;padding:0 14px;font-size:15px} }
+
+/* =====================================================================
+   CONTROL PANEL (?control)
+   ===================================================================== */
+body.mode-control{overflow:auto;background:radial-gradient(1200px 600px at 75% -10%, #13205a 0%, transparent 60%), var(--bg)}
+body.mode-control #viewport{position:relative;inset:auto;width:100%;aspect-ratio:16/9;border-radius:14px;box-shadow:0 0 0 1px var(--line-2)}
+.control{display:none;max-width:1400px;margin:0 auto;padding:0 20px 40px}
+body.mode-control .control{display:block}
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0}
+.appbar-l{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brandsm{display:flex;align-items:flex-end;gap:6px;line-height:1}
+.brandsm .el{font:800 italic 18px/1 var(--display);letter-spacing:1px;padding-bottom:4px}
+.brandsm .ro{font:900 italic 38px/1 var(--display);background:linear-gradient(180deg,var(--gold-1),var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.appbar-sub{font:600 15px var(--body);color:var(--muted);padding-left:16px;border-left:1px solid var(--line-2)}
+.net{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:99px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);font:600 13px var(--body);color:var(--ink-2)}
+.net i{width:8px;height:8px;border-radius:50%;background:#F59E0B;animation:blink 1s steps(2) infinite}
+.net.ok i{background:#22C55E;animation:none;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+.net.off i{background:#EF4444;animation:none}
+.appbar-r{display:flex;gap:8px;flex-wrap:wrap}
+.c-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(380px,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){ .c-grid{grid-template-columns:1fr} .c-grid > .col:last-child{order:-1} }
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.panel{background:linear-gradient(180deg,var(--surface-2),var(--surface));border-radius:20px;padding:18px;box-shadow:0 0 0 1px var(--line), 0 20px 40px rgba(0,0,0,.3)}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;font:700 13px var(--body);letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.onair{display:inline-flex;align-items:center;gap:7px;color:#fff;background:#DC2626;padding:5px 9px;border-radius:7px;font:800 12px var(--body);letter-spacing:2px}
+.onair i{width:7px;height:7px;border-radius:50%;background:#fff}
+.teams2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:700px){ .teams2{grid-template-columns:1fr} }
+.cteam{position:relative;overflow:hidden}
+.cteam::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--c1),var(--c3))}
+.cteam.on{box-shadow:0 0 0 2px var(--c2), 0 20px 40px rgba(0,0,0,.3)}
+.ct-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ct-name{font:800 italic 24px/1 var(--display);text-transform:uppercase;color:color-mix(in srgb,var(--c1) 75%, white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-time{font:800 40px/1 var(--display);font-variant-numeric:tabular-nums}
+.ct-time small{font:700 14px var(--body);color:var(--muted);margin-left:3px}
+.ct-stats{display:flex;gap:14px;margin:8px 0 14px;font:600 14px var(--body);color:var(--muted)}
+.ct-stats b{font-weight:800} .ct-stats .g{color:#3BE07F} .ct-stats .r{color:#FF7A7A} .ct-stats .w{color:var(--ink)}
+.chips{display:grid;grid-template-columns:repeat(9,1fr);gap:6px}
+.chip{aspect-ratio:1;min-height:34px;border:0;padding:0;border-radius:10px;cursor:pointer;color:#fff;font:800 18px/1 var(--display);
+  background:color-mix(in srgb,var(--c2) 55%, #0c1226);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:filter .15s}
+.chip:hover{filter:brightness(1.2)}
+.chip.correct{background:#16A34A} .chip.wrong{background:#DC2626} .chip.passed{background:#EAB308;color:#2A1F00}
+.chip.correct,.chip.wrong{cursor:default}
+.chip.cur{box-shadow:0 0 0 2px #fff, 0 0 14px rgba(255,255,255,.4)}
+
+.qcard{position:relative;overflow:hidden;padding-top:22px}
+.qcard::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--team-3),var(--team-2),var(--team-1))}
+.q-turn{display:flex;align-items:center;gap:10px;font:700 13px var(--body);letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.q-turn b{font:800 italic 22px/1 var(--display);letter-spacing:.5px;color:color-mix(in srgb,var(--team-1) 75%, white)}
+.q-turn i{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.q-turn.running i{background:#ff3b3b;animation:live 1.3s infinite}
+.q-turn .st{margin-left:auto;font-size:12px}
+.q-main{display:flex;align-items:center;gap:16px;margin:16px 0 12px}
+.q-ball{flex:none;width:84px;height:84px;border-radius:22px;display:grid;place-items:center;font:800 62px/1 var(--display);color:#fff;
+  background:radial-gradient(115% 115% at 50% 6%, var(--team-1) 0%, var(--team-2) 50%, var(--team-3) 100%);box-shadow:inset 0 2px 1px rgba(255,255,255,.45), 0 10px 20px rgba(0,0,0,.4)}
+.q-ball.passed{background:radial-gradient(115% 115% at 50% 6%, #FFF1A6, #FACC15 50%, #A87900);color:#2A1F00}
+.q-rule{font:800 italic 32px/1 var(--display);text-transform:uppercase;letter-spacing:.5px}
+.q-tag[hidden]{display:none}
+.q-tag{display:inline-block;margin-top:8px;padding:4px 9px;border-radius:7px;background:rgba(250,204,21,.15);color:#FFD84A;font:700 12px var(--body);letter-spacing:2px}
+.q-def{font:500 21px/1.45 var(--body);color:var(--ink)}
+.q-def.missing{color:#FFD84A;font-style:italic}
+.q-ans{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line)}
+.q-ans small{display:block;font:700 11px var(--body);letter-spacing:3px;color:var(--muted)}
+.q-ans span{display:block;margin-top:6px;font:800 34px/1.05 var(--display);letter-spacing:1px;color:var(--gold-1)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pad2{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:12px;margin-top:12px}
+.pad2 .btn{min-height:64px;min-width:0;padding:0 12px}
+.pad .btn{min-width:0;padding:0 8px}
+@media (max-width:1300px){ .pad2 kbd{display:none} }
+@media (max-width:520px){ .chips{gap:4px} .chip{min-height:0;font-size:15px;border-radius:7px} .pad2{grid-template-columns:1fr 1fr} .pad2 .btn-play{grid-column:1 / -1} .btn-xl{font-size:21px;min-height:92px} .appbar-sub{display:none} }
+.keys{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:14px;font:500 13px var(--body);color:var(--muted)}
+.keys kbd{font:700 12px var(--body);color:var(--ink);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line-2);padding:3px 7px;border-radius:6px;margin-right:4px}
+
+/* =====================================================================
+   MODALS
+   ===================================================================== */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;z-index:60;background:rgba(3,5,12,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal.open{display:flex}
+.sheet{width:100%;max-width:900px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;border-radius:20px;
+  background:linear-gradient(180deg,#131c3c,#0b1128);box-shadow:0 0 0 1px var(--line-2), 0 30px 80px rgba(0,0,0,.6)}
+.sheet header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 16px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sheet h2{margin:0;font:800 italic 30px/1 var(--display);text-transform:uppercase;letter-spacing:.5px}
+.sheet .body{padding:20px 22px;overflow:auto}
+.sheet footer{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.sheet p,.sheet li{font:400 16px/1.6 var(--body);color:var(--ink-2)}
+.sheet b{color:var(--ink)}
+.sheet h3{margin:22px 0 6px;font:800 italic 22px/1 var(--display);letter-spacing:.5px;text-transform:uppercase;color:var(--gold-1)}
+.sheet kbd{font:700 12px var(--body);color:var(--ink);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line-2);padding:2px 6px;border-radius:6px}
+.tabs{display:flex;gap:6px;padding:4px;border-radius:12px;background:rgba(0,0,0,.3)}
+.tab{border:0;border-radius:9px;padding:9px 14px;min-height:40px;font:700 14px var(--body);background:transparent;color:var(--ink-2);cursor:pointer}
+.tab.on.azul{background:#2563FF;color:#fff} .tab.on.naranja{background:#FF7A1A;color:#1f0d00}
+.qrow{display:grid;grid-template-columns:40px 130px 200px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+@media (max-width:700px){ .qrow{grid-template-columns:40px 1fr} .qrow textarea{grid-column:1 / -1} .qrow input{grid-column:2} }
+.qrow .l{font:800 28px/44px var(--display);text-align:center}
+.qrow.empty .l{color:var(--yellow)}
+input,select,textarea{width:100%;min-height:44px;padding:10px 12px;border-radius:10px;border:0;background:#070b1c;color:var(--ink);font:500 15px var(--body);
+  box-shadow:inset 0 0 0 1px var(--line-2);transition:box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--gold-2)}
+textarea{resize:vertical;line-height:1.4}
+label.f{display:flex;flex-direction:column;gap:6px;font:700 13px var(--body);letter-spacing:1px;color:var(--ink-2);margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:600px){ .grid2{grid-template-columns:1fr} }
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.divider{height:1px;background:var(--line);margin:20px 0}
+.urlrow{display:flex;gap:8px;margin:8px 0 6px}
+.urlrow input{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace}
+.note{font-size:14px !important;color:var(--muted) !important}
+.steps{padding-left:22px}
+.steps li{margin-bottom:6px}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
 </style>
 </head>
 <body>
 
-<!-- ============ STAGE (shared by every mode) ============ -->
+<!-- Icon sprite (Lucide, MIT) -->
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="14" y="4" width="4.5" height="16" rx="1.2"/><rect x="5.5" y="4" width="4.5" height="16" rx="1.2"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+    <symbol id="i-switch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eyeoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol>
+    <symbol id="i-max" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ STAGE ============ -->
 <div id="viewport">
   <div class="stage" id="stage">
     <div class="bg"></div>
     <div class="hole" id="hole"></div>
-    <div class="band"></div>
+    <div class="track"></div>
     <div class="ring" id="ring"></div>
     <div class="center-info">
       <div class="ci-team" id="ciTeam"></div>
-      <div class="ci-letter" id="ciLetter">A</div>
+      <div class="ci-ball" id="ciBall"><span>A</span></div>
       <div class="ci-rule" id="ciRule"></div>
     </div>
     <div class="flashring" id="flashring"></div>
+    <div class="brand"><span class="el">EL</span><span class="ro">ROSCO</span></div>
+    <div class="turnchip" id="turnchip"><small>JUEGA</small><span id="tcName"></span><i></i></div>
     <div class="tcard left" id="card-azul"></div>
     <div class="tcard right" id="card-naranja"></div>
-    <div class="defbar">
-      <div class="db-ball" id="dbBall">A</div>
-      <div class="db-text"><div class="db-rule" id="dbRule"></div><div class="db-def" id="dbDef"></div></div>
+    <div class="lt">
+      <div class="lt-tab" id="ltTab"><div class="lt-rule" id="ltRule">Con la</div><div class="lt-letter" id="ltLetter">A</div></div>
+      <div class="lt-body"><div class="lt-def" id="ltDef"></div><div class="lt-passed" id="ltPassed">PASADA</div></div>
     </div>
-    <div class="banner" id="banner"></div>
+    <div class="banner" id="banner"><div class="strip"></div><div class="txt" id="bannerTxt"></div></div>
     <div class="final" id="final"></div>
   </div>
 </div>
 
 <!-- ============ HOST BAR (pantalla) ============ -->
 <div class="hostbar" id="hostbar" hidden>
-  <button class="hb-btn g" data-act="correct">✔ Correcta <kbd>C</kbd></button>
-  <button class="hb-btn y" data-act="passed">⟳ Pasapalabra <kbd>P</kbd></button>
-  <button class="hb-btn r" data-act="wrong">✖ Incorrecta <kbd>X</kbd></button>
+  <button class="btn btn-ok btn-lg" data-act="correct"><svg class="ic"><use href="#i-check"/></svg>Correcta<kbd>C</kbd></button>
+  <button class="btn btn-pass btn-lg" data-act="passed"><svg class="ic"><use href="#i-skip"/></svg>Pasapalabra<kbd>P</kbd></button>
+  <button class="btn btn-err btn-lg" data-act="wrong"><svg class="ic"><use href="#i-x"/></svg>Incorrecta<kbd>X</kbd></button>
   <span class="hb-sep"></span>
-  <button class="hb-btn w" data-act="play">▶ Reloj <kbd>Espacio</kbd></button>
-  <button class="hb-btn gh" data-act="undo">↶ <kbd>Z</kbd></button>
-  <button class="hb-btn gh" data-act="switch">⇄ Turno <kbd>T</kbd></button>
-  <div class="hb-ans hidden" id="hbAns"><span id="hbAnsText">—</span><button data-act="reveal">👁 R</button></div>
-  <div class="hb-tools">
-    <button class="hb-btn gh" data-act="newGame" title="Nuevo juego">🔄 Nuevo</button>
-    <button class="hb-btn gh" data-open="obs" title="Usar en OBS / streaming">📡 OBS</button>
-    <button class="hb-btn gh" data-open="editor" title="Preguntas">✏️</button>
-    <button class="hb-btn gh" data-open="settings" title="Configuración">⚙️</button>
-    <button class="hb-btn gh" data-open="rules" title="Reglas">📖</button>
-    <button class="hb-btn gh" data-act="full" title="Pantalla completa">⛶</button>
-  </div>
+  <button class="btn btn-play btn-lg" data-act="play"></button>
+  <button class="btn btn-ghost btn-icon" data-act="undo" aria-label="Deshacer (Z)" title="Deshacer (Z)"><svg class="ic"><use href="#i-undo"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-act="switch" aria-label="Cambiar turno (T)" title="Cambiar turno (T)"><svg class="ic"><use href="#i-switch"/></svg></button>
+  <div class="hb-ans hidden" id="hbAns"><small>RESPUESTA</small><span id="hbAnsText">—</span>
+    <button class="btn btn-ghost btn-icon" data-act="reveal" id="btnReveal" aria-label="Mostrar respuesta (R)" title="Mostrar respuesta (R)"><svg class="ic"><use href="#i-eye"/></svg></button></div>
+  <span class="hb-sep"></span>
+  <button class="btn btn-ghost btn-icon" data-act="newGame" aria-label="Nuevo juego" title="Nuevo juego"><svg class="ic"><use href="#i-reset"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-open="obs" aria-label="Usar en OBS" title="Usar en OBS / streaming"><svg class="ic"><use href="#i-radio"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-open="editor" aria-label="Preguntas" title="Preguntas"><svg class="ic"><use href="#i-pencil"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-open="settings" aria-label="Configuración" title="Configuración"><svg class="ic"><use href="#i-sliders"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-open="rules" aria-label="Reglas" title="Reglas"><svg class="ic"><use href="#i-book"/></svg></button>
+  <button class="btn btn-ghost btn-icon" data-act="full" aria-label="Pantalla completa (F)" title="Pantalla completa (F)"><svg class="ic"><use href="#i-max"/></svg></button>
 </div>
 
 <!-- ============ CONTROL PANEL (?control) ============ -->
 <div class="control" id="control">
-  <div class="c-head">
-    <div class="c-title">EL <span>ROSCO</span> · Panel del conductor <span class="net" id="net">○ conectando…</span></div>
-    <div class="c-tools">
-      <button class="pill danger" data-act="newGame">🔄 Nuevo juego</button>
-      <button class="pill primary" data-act="openOverlay">📺 Abrir overlay</button>
-      <button class="pill plain" data-open="obs">📡 Cómo usarlo en OBS</button>
-      <button class="pill plain" data-open="editor">✏️ Preguntas</button>
-      <button class="pill plain" data-open="settings">⚙️ Configuración</button>
-      <button class="pill plain" data-open="rules">📖 Reglas</button>
+  <div class="appbar">
+    <div class="appbar-l">
+      <div class="brandsm"><span class="el">EL</span><span class="ro">ROSCO</span></div>
+      <span class="appbar-sub">Panel del conductor</span>
+      <span class="net" id="net"><i></i><span>Conectando…</span></span>
+    </div>
+    <div class="appbar-r">
+      <button class="btn btn-danger" data-act="newGame"><svg class="ic"><use href="#i-reset"/></svg>Nuevo juego</button>
+      <button class="btn btn-primary" data-act="openOverlay"><svg class="ic"><use href="#i-tv"/></svg>Abrir overlay</button>
+      <button class="btn btn-ghost" data-open="obs"><svg class="ic"><use href="#i-radio"/></svg>OBS</button>
+      <button class="btn btn-ghost" data-open="editor"><svg class="ic"><use href="#i-pencil"/></svg>Preguntas</button>
+      <button class="btn btn-ghost btn-icon" data-open="settings" aria-label="Configuración" title="Configuración"><svg class="ic"><use href="#i-sliders"/></svg></button>
+      <button class="btn btn-ghost btn-icon" data-open="rules" aria-label="Reglas" title="Reglas"><svg class="ic"><use href="#i-book"/></svg></button>
     </div>
   </div>
-  <div style="display:flex;flex-direction:column;gap:14px">
-    <div id="previewSlot"></div>
-    <div class="c-card c-team" id="cteam-azul"></div>
-    <div class="c-card c-team" id="cteam-naranja"></div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:14px">
-    <div class="c-card cur">
-      <div class="c-turn" id="cTurn"><i></i><span></span></div>
-      <div class="c-letter"><div class="db-ball" id="cBall">A</div><div class="c-rule" id="cRule"></div></div>
-      <div class="c-def" id="cDef"></div>
-      <div class="c-ans"><small>RESPUESTA (solo la ves vos)</small><span id="cAns">—</span></div>
+  <div class="c-grid">
+    <div class="col">
+      <div class="panel">
+        <div class="panel-h"><span>Lo que sale al aire</span><span class="onair"><i></i>EN VIVO</span></div>
+        <div id="previewSlot"></div>
+      </div>
+      <div class="teams2">
+        <div class="panel cteam" id="cteam-azul"></div>
+        <div class="panel cteam" id="cteam-naranja"></div>
+      </div>
     </div>
-    <div class="c-actions">
-      <button class="hb-btn g" data-act="correct">✔ Correcta<kbd>C</kbd></button>
-      <button class="hb-btn y" data-act="passed">⟳ Pasapalabra<kbd>P</kbd></button>
-      <button class="hb-btn r" data-act="wrong">✖ Incorrecta<kbd>X</kbd></button>
+    <div class="col">
+      <div class="panel qcard">
+        <div class="q-turn" id="qTurn"><i></i>Turno <b id="qTeam"></b><span class="st" id="qState"></span></div>
+        <div class="q-main"><div class="q-ball" id="qBall">A</div><div><div class="q-rule" id="qRule"></div><span class="q-tag" id="qTag" hidden>LETRA PASADA</span></div></div>
+        <div class="q-def" id="qDef"></div>
+        <div class="q-ans"><small>RESPUESTA · SOLO LA VES VOS</small><span id="qAns">—</span></div>
+      </div>
+      <div>
+        <div class="pad">
+          <button class="btn btn-ok btn-xl" data-act="correct"><svg class="ic"><use href="#i-check"/></svg>Correcta<kbd>C</kbd></button>
+          <button class="btn btn-pass btn-xl" data-act="passed"><svg class="ic"><use href="#i-skip"/></svg>Pasapalabra<kbd>P</kbd></button>
+          <button class="btn btn-err btn-xl" data-act="wrong"><svg class="ic"><use href="#i-x"/></svg>Incorrecta<kbd>X</kbd></button>
+        </div>
+        <div class="pad2">
+          <button class="btn btn-play btn-lg" data-act="play"></button>
+          <button class="btn btn-ghost btn-lg" data-act="undo"><svg class="ic"><use href="#i-undo"/></svg>Deshacer</button>
+          <button class="btn btn-ghost btn-lg" data-act="switch"><svg class="ic"><use href="#i-switch"/></svg>Turno</button>
+        </div>
+        <div class="keys"><span><kbd>Espacio</kbd>reloj</span><span><kbd>C</kbd>correcta</span><span><kbd>P</kbd>pasapalabra</span><span><kbd>X</kbd>incorrecta</span><span><kbd>Z</kbd>deshacer</span><span><kbd>T</kbd>turno</span><span>Clic en una letra para saltar a ella</span></div>
+      </div>
     </div>
-    <div class="c-row">
-      <button class="hb-btn w" data-act="play">▶ Arrancar reloj<kbd>Espacio</kbd></button>
-      <button class="hb-btn gh" data-act="undo">↶ Deshacer<kbd>Z</kbd></button>
-      <button class="hb-btn gh" data-act="switch">⇄ Turno<kbd>T</kbd></button>
-    </div>
-    <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.6">Tocá una letra de los mini‑roscos para saltar a ella. Todo se guarda solo y se sincroniza con el overlay abierto en este mismo navegador.</p>
   </div>
 </div>
 
 <!-- ============ MODALS ============ -->
-<div class="modal" id="rules"><div class="sheet">
-  <header><h2>Cómo se juega El Rosco</h2><button class="pill plain" data-close>Cerrar</button></header>
+<div class="modal" id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesT"><div class="sheet" style="max-width:760px">
+  <header><h2 id="rulesT">Cómo se juega</h2><button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar"><svg class="ic" data-close><use href="#i-x"/></svg></button></header>
   <div class="body">
-    <ol>
-      <li>Cada equipo tiene <b>su propio rosco</b> (Azul y Naranja), con una palabra por letra de la A a la Z incluida la Ñ. “<b>Con la…</b>” = la palabra empieza con esa letra; “<b>Contiene la…</b>” = la letra está en algún lugar de la palabra.</li>
-      <li>Cada equipo tiene <b>su propio reloj</b>, que solo corre mientras ese equipo responde.</li>
-      <li><b>Acierta</b> → letra <b style="color:#4fec8a">verde</b> y sigue jugando sin frenar el reloj.<br>
-          <b>“¡Pasapalabra!”</b> → letra <b style="color:#ffd21f">amarilla</b>, se frena el reloj y juega el rival. La letra vuelve en la próxima vuelta.<br>
-          <b>Falla</b> → letra <b style="color:#ff6b6b">roja</b>, suma un error, se frena el reloj y juega el rival.</li>
+    <ol class="steps">
+      <li>Cada equipo tiene <b>su propio rosco</b> con una palabra por letra, de la A a la Z con la Ñ. <b>“Con la…”</b> = la palabra empieza con esa letra. <b>“Contiene la…”</b> = la letra está en cualquier parte.</li>
+      <li>Cada equipo tiene <b>su propio reloj</b>, que solo corre mientras responde.</li>
+      <li><b style="color:#3BE07F">Acierta</b>: la letra queda verde y sigue jugando sin frenar el reloj.<br>
+          <b style="color:#FFD84A">“¡Pasapalabra!”</b>: la letra queda amarilla, se frena el reloj y juega el rival. La letra vuelve en la próxima vuelta.<br>
+          <b style="color:#FF7A7A">Falla</b>: la letra queda roja, suma un error, se frena el reloj y juega el rival.</li>
       <li>Se alternan hasta que cada equipo complete su rosco o se quede sin tiempo. Si uno termina, el otro sigue solo.</li>
-      <li><b>Gana el que tiene más aciertos.</b> Empate → gana el que tiene <b>menos errores</b>. Rosco completo sin errores = “bote”.</li>
+      <li><b>Gana el que tiene más aciertos.</b> Si empatan, gana el que tiene <b>menos errores</b>.</li>
     </ol>
-    <p><b>Atajos:</b> <kbd>Espacio</kbd> reloj · <kbd>C</kbd> correcta · <kbd>X</kbd> incorrecta · <kbd>P</kbd> pasapalabra · <kbd>R</kbd> ver respuesta · <kbd>Z</kbd> deshacer · <kbd>T</kbd> cambiar turno.</p>
+    <p><kbd>Espacio</kbd> reloj · <kbd>C</kbd> correcta · <kbd>P</kbd> pasapalabra · <kbd>X</kbd> incorrecta · <kbd>R</kbd> ver respuesta · <kbd>Z</kbd> deshacer · <kbd>T</kbd> cambiar turno</p>
   </div>
 </div></div>
 
-<div class="modal" id="obs"><div class="sheet" style="max-width:780px">
-  <header><h2>📡 Usarlo en un stream (OBS / YouTube)</h2><button class="pill plain" data-close>Cerrar</button></header>
+<div class="modal" id="obs" role="dialog" aria-modal="true" aria-labelledby="obsT"><div class="sheet" style="max-width:800px">
+  <header><h2 id="obsT">Usarlo en el stream</h2><button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar"><svg class="ic" data-close><use href="#i-x"/></svg></button></header>
   <div class="body">
-    <p>El panel y el overlay se conectan por internet con el <b>código de sala</b> de este panel. Por eso el overlay se actualiza solo aunque esté en OBS, en otra ventana o en otra compu.</p>
-    <h3>Opción A — Fuente de navegador en OBS (recomendada)</h3>
-    <ol>
+    <p>El panel y el overlay se conectan por internet con el <b>código de sala</b> de este panel. El overlay se actualiza solo aunque esté en OBS, en otra ventana o en otra compu.</p>
+    <h3>Opción A · Fuente de navegador en OBS (recomendada)</h3>
+    <ol class="steps">
       <li>Manejá el juego desde este panel, en Chrome.</li>
-      <li>En OBS: <b>+ → Navegador</b> → pegá este link → ancho <b>1920</b>, alto <b>1080</b> → Aceptar:
-        <div class="urlrow"><input readonly id="urlOverlayAlpha"><button class="pill plain" data-copy="urlOverlayAlpha">Copiar</button></div>
+      <li>En OBS: <b>+ → Navegador</b>, pegá este link, ancho <b>1920</b>, alto <b>1080</b>:
+        <div class="urlrow"><input readonly id="urlOverlayAlpha" aria-label="Link del overlay transparente"><button class="btn btn-ghost" data-copy="urlOverlayAlpha"><svg class="ic"><use href="#i-copy"/></svg>Copiar</button></div>
         El centro del rosco queda transparente.</li>
-      <li>Poné tu <b>cámara debajo</b> del rosco en la lista de fuentes y acomodala para que la persona quede centrada en el círculo.</li>
-      <li>Para los sonidos: en la fuente de navegador tildá “Controlar el audio mediante OBS”.</li>
+      <li>Poné la <b>cámara debajo</b> del rosco y centrá a la persona en el círculo.</li>
+      <li>Para los sonidos, tildá “Controlar el audio mediante OBS”.</li>
     </ol>
-    <p style="font-size:13px;color:var(--muted)">Si el overlay no se actualiza: fijate que arriba de este panel diga <b>● Online</b>. En OBS, botón derecho sobre la fuente → Propiedades → “Actualizar caché de la página actual”.</p>
-    <h3>Opción B — Ventana de Chrome + croma</h3>
-    <ol>
-      <li>Tocá <b>📺 Abrir overlay</b> (o abrí este link en una ventana):<div class="urlrow"><input readonly id="urlOverlay"><button class="pill plain" data-copy="urlOverlay">Copiar</button></div></li>
-      <li>En OBS: <b>Captura de ventana</b> de “Rosco · Overlay” → Filtros → <b>Clave de croma</b> verde → cámara debajo.</li>
+    <p class="note">Si no se actualiza: fijate que el panel diga <b>Online</b>. En OBS: botón derecho en la fuente → Propiedades → “Actualizar caché de la página actual”.</p>
+    <h3>Opción B · Ventana de Chrome + croma</h3>
+    <ol class="steps">
+      <li>Tocá <b>Abrir overlay</b> o abrí este link:<div class="urlrow"><input readonly id="urlOverlay" aria-label="Link del overlay con croma"><button class="btn btn-ghost" data-copy="urlOverlay"><svg class="ic"><use href="#i-copy"/></svg>Copiar</button></div></li>
+      <li>En OBS: <b>Captura de ventana</b> → Filtros → <b>Clave de croma</b> verde → cámara debajo.</li>
     </ol>
-    <p>Versión “flotante” (todo el fondo verde, el rosco encima de la cámara a pantalla completa):</p>
-    <div class="urlrow"><input readonly id="urlOverlayFloat"><button class="pill plain" data-copy="urlOverlayFloat">Copiar</button></div>
-    <h3>Abrir este mismo panel en otra compu</h3>
-    <div class="urlrow"><input readonly id="urlControl"><button class="pill plain" data-copy="urlControl">Copiar</button></div>
+    <p>Versión flotante (todo el fondo verde, rosco encima de la cámara a pantalla completa):</p>
+    <div class="urlrow"><input readonly id="urlOverlayFloat" aria-label="Link del overlay flotante"><button class="btn btn-ghost" data-copy="urlOverlayFloat"><svg class="ic"><use href="#i-copy"/></svg>Copiar</button></div>
+    <h3>Este panel en otra compu</h3>
+    <div class="urlrow"><input readonly id="urlControl" aria-label="Link del panel"><button class="btn btn-ghost" data-copy="urlControl"><svg class="ic"><use href="#i-copy"/></svg>Copiar</button></div>
   </div>
 </div></div>
 
-<div class="modal" id="editor"><div class="sheet">
-  <header><h2>Preguntas</h2>
-    <div class="tabs"><button class="tab azul on" data-tab="azul">Rosco Azul</button><button class="tab naranja" data-tab="naranja">Rosco Naranja</button></div>
+<div class="modal" id="editor" role="dialog" aria-modal="true" aria-labelledby="edT"><div class="sheet">
+  <header><h2 id="edT">Preguntas</h2>
+    <div class="tabs" role="tablist"><button class="tab azul on" data-tab="azul" role="tab">Rosco azul</button><button class="tab naranja" data-tab="naranja" role="tab">Rosco naranja</button></div>
   </header>
   <div class="body" id="editorBody"></div>
   <footer>
-    <button class="pill plain" id="btnDefaults">Restaurar preguntas originales</button>
-    <button class="pill plain" data-close>Cancelar</button>
-    <button class="pill primary" id="btnSaveQ">Guardar preguntas</button>
+    <button class="btn btn-ghost" id="btnDefaults" style="margin-right:auto"><svg class="ic"><use href="#i-reset"/></svg>Restaurar originales</button>
+    <button class="btn btn-ghost" data-close>Cancelar</button>
+    <button class="btn btn-primary" id="btnSaveQ"><svg class="ic"><use href="#i-check"/></svg>Guardar preguntas</button>
   </footer>
 </div></div>
 
-<div class="modal" id="settings"><div class="sheet" style="max-width:620px">
-  <header><h2>Configuración</h2><button class="pill plain" data-close>Cerrar</button></header>
+<div class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="stT"><div class="sheet" style="max-width:640px">
+  <header><h2 id="stT">Configuración</h2><button class="btn btn-ghost btn-icon" data-close aria-label="Cerrar"><svg class="ic" data-close><use href="#i-x"/></svg></button></header>
   <div class="body">
     <div class="grid2">
-      <label class="f">Nombre equipo azul<input id="nameAzul"></label>
-      <label class="f">Nombre equipo naranja<input id="nameNaranja"></label>
-      <label class="f">Segundos equipo azul<input id="secAzul" type="number" min="5" step="5"></label>
-      <label class="f">Segundos equipo naranja<input id="secNaranja" type="number" min="5" step="5"></label>
+      <label class="f" for="nameAzul">Nombre equipo azul<input id="nameAzul"></label>
+      <label class="f" for="nameNaranja">Nombre equipo naranja<input id="nameNaranja"></label>
+      <label class="f" for="secAzul">Segundos equipo azul<input id="secAzul" type="number" min="5" step="5"></label>
+      <label class="f" for="secNaranja">Segundos equipo naranja<input id="secNaranja" type="number" min="5" step="5"></label>
+      <label class="f" for="starter">Arranca<select id="starter"><option value="azul">Equipo azul</option><option value="naranja">Equipo naranja</option></select></label>
+      <label class="f" for="soundSel">Sonidos<select id="soundSel"><option value="1">Activados</option><option value="0">Silenciados</option></select></label>
     </div>
-    <div class="grid2">
-      <label class="f">¿Qué equipo arranca?<select id="starter"><option value="azul">Azul</option><option value="naranja">Naranja</option></select></label>
-      <label class="f">Sonidos<select id="soundSel"><option value="1">Activados</option><option value="0">Silenciados</option></select></label>
+    <p class="note">Los segundos se aplican en el próximo juego. “Aplicar al reloj” cambia el tiempo restante ahora.</p>
+    <div class="row">
+      <button class="btn btn-primary" id="btnSaveCfg"><svg class="ic"><use href="#i-check"/></svg>Guardar</button>
+      <button class="btn btn-ghost" id="btnApplyTime"><svg class="ic"><use href="#i-clock"/></svg>Aplicar al reloj</button>
+      <button class="btn btn-danger" id="btnReset"><svg class="ic"><use href="#i-reset"/></svg>Nuevo juego</button>
     </div>
-    <p style="font-size:13px;color:var(--muted)">Los segundos se aplican al reiniciar. “Aplicar al reloj actual” cambia el tiempo restante ya mismo.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="pill primary" id="btnSaveCfg">Guardar</button>
-      <button class="pill plain" id="btnApplyTime">Aplicar al reloj actual</button>
-      <button class="pill danger" id="btnReset">Reiniciar partida</button>
-    </div>
-    <hr style="border-color:var(--line);margin:18px 0">
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="pill plain" id="btnExport">⬇ Exportar partida (JSON)</button>
-      <button class="pill plain" id="btnImport">⬆ Importar partida</button>
+    <div class="divider"></div>
+    <div class="row">
+      <button class="btn btn-ghost" id="btnExport"><svg class="ic"><use href="#i-download"/></svg>Exportar partida</button>
+      <button class="btn btn-ghost" id="btnImport"><svg class="ic"><use href="#i-upload"/></svg>Importar partida</button>
       <input type="file" id="fileImport" accept="application/json,.json" hidden>
     </div>
   </div>
@@ -413,7 +585,7 @@
 const LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 const STORE_KEY = 'rosco-lla-v1';
 const TEAMS = ['azul','naranja'];
-const COLORS = { azul:['#2f7bff','#0a36b0'], naranja:['#ff8a2a','#c24a00'] };
+const PAL = { azul:['#6EA8FF','#2563FF','#0B2A8C'], naranja:['#FFB36B','#FF7A1A','#A83E00'] };
 
 const params = new URLSearchParams(location.search);
 const MODE = params.has('overlay') ? 'overlay' : params.has('control') ? 'control' : 'pantalla';
@@ -439,7 +611,7 @@ const DEFAULT_WORDS = {
     ['K','empieza','KICILLOF','Repudiable e inoperante gobernador de la provincia de Buenos Aires.'],
     ['L','empieza','LOUSTEAU','Tibio senador nacional y presidente del comité nacional de la UCR.'],
     ['M','empieza','MILEI','El gran León.'],
-    ['N','empieza','NEGRERIO',''],
+    ['N','empieza','NEGRERÍO','Adjetivo que le damos al tumulto de gente que se encuentra en las marchas de la CGT.'],
     ['Ñ','contiene','COMPAÑERO','Forma tradicional en la que se denominan y saludan las mierdas del peronismo.'],
     ['O','empieza','OBELISCO','Monumento icónico porteño que alguna vez fue cubierto por un condón gigante.'],
     ['P','empieza','PULLARO','Dirigente radical y gobernador de la provincia de Santa Fe cuyo nombre comienza con M.'],
@@ -468,14 +640,14 @@ const DEFAULT_WORDS = {
     ['K','empieza','KISSINGER','Influyente y polémico diplomático estadounidense, referente de la Guerra Fría, cuyo nombre de pila comienza con H.'],
     ['L','empieza','LLA','Sigla abreviada de nuestro partido político.'],
     ['M','empieza','MACRI','Presidente de Boca en el 98.'],
-    ['N','empieza','NICOLÁS',''],
+    ['N','empieza','NICOLÁS','Nombre de pila del funcionario vampiro al que mantenemos gratis hace más de 10 años, mejor amigo de la Rusa.'],
     ['Ñ','empieza','ÑOQUI','Empleado público inservible.'],
     ['O','empieza','ONU','Organización internacional descripta últimamente como inútil según nuestro presidente.'],
     ['P','empieza','PUTIN','Presidente de la Federación Rusa con fuerte peso geopolítico global.'],
     ['Q','empieza','QUILMES','Municipio del conurbano bonaerense gobernado por la chorra de Mendoza.'],
     ['R','empieza','ROSADA','Sede principal del Poder Ejecutivo Nacional.'],
     ['S','empieza','SERGIO','Nombre de pila del hombre más romántico de la política.'],
-    ['T','empieza','TRAUMA',''],
+    ['T','empieza','TIRANÍA','Abuso o imposición en grado extraordinario de cualquier poder, fuerza o superioridad.'],
     ['U','empieza','UNIÓN POR LA PATRIA','Nombre de la coalición peronista que llevó a Sergio Massa como candidato a presidente en 2023.'],
     ['V','empieza','VACA MUERTA','Formación hidrocarburífera clave en la provincia del Neuquén para la soberanía energética.'],
     ['W','contiene','WASHINGTON','Capital de EE. UU., donde tienen sede la Casa Blanca, el FMI y el Banco Mundial.'],
@@ -553,7 +725,7 @@ let mq = null, mqReady = false;
 function setNet(st){
   const n = document.getElementById('net'); if (!n) return;
   n.className = 'net ' + st;
-  n.textContent = st === 'ok' ? '● Online · sala ' + SALA : st === 'off' ? '● Sin conexión (solo funciona en esta compu)' : '○ conectando…';
+  n.querySelector('span').textContent = st === 'ok' ? 'Online · sala ' + SALA : st === 'off' ? 'Sin conexión · solo funciona en esta compu' : 'Conectando…';
 }
 function publish(){
   if (!mq || !mqReady || MODE === 'overlay') return;
@@ -663,40 +835,49 @@ function tick(){
   if (Math.ceil(T.time) !== before) commit(Math.ceil(T.time) <= 5 ? 'tick' : null);
 }
 
+
 /* ================= rendering ================= */
 const $ = id => document.getElementById(id);
-const RCX = 960, RCY = 450, RR = 365;
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const MARK = { correct: 'check', wrong: 'x', passed: 'skip' };
+const RCX = 960, RCY = 455, RR = 367;
+const setPal = (el, t) => PAL[t].forEach((c, k) => el.style.setProperty('--c' + (k + 1), c));
+
 function buildStage(){
   const ring = $('ring');
   LETTERS.forEach((L, i) => {
     const a = (i / LETTERS.length) * 2 * Math.PI - Math.PI / 2;
     const b = document.createElement('div');
-    b.className = 'ball'; b.textContent = L;
+    b.className = 'ball';
+    b.innerHTML = `<span class="l">${L}</span><span class="mk"></span>`;
     b.style.left = (RCX + RR * Math.cos(a)) + 'px';
     b.style.top  = (RCY + RR * Math.sin(a)) + 'px';
     b.addEventListener('click', () => jumpTo(state.active, i));
     ring.appendChild(b);
   });
   for (const t of TEAMS){
-    const c = $('card-' + t);
-    c.style.setProperty('--tc', COLORS[t][0]);
-    c.innerHTML = `<div class="tc-name"></div><div class="tc-live"><i></i><span></span></div>
-      <div class="tc-clock"></div><div class="tc-sub">SEGUNDOS</div>
-      <div class="tc-stats"><div class="tc-stat ok"><b class="n-ok"></b><small>ACIERTOS</small></div><div class="tc-stat err"><b class="n-err"></b><small>ERRORES</small></div></div>
-      <div class="tc-dots">${LETTERS.map(() => '<span></span>').join('')}</div><div class="tc-badge"></div>`;
+    const c = $('card-' + t); setPal(c, t);
+    c.innerHTML = `<div class="tc-head"><div class="tc-name"></div><div class="tc-state"><i></i><span></span></div></div>
+      <div class="tc-body"><div class="tc-clock"></div><div class="tc-unit">SEGUNDOS</div><div class="tc-bar"><b></b></div>
+      <div class="tc-stats"><div class="tc-stat ok"><b class="n-ok"></b><small>ACIERTOS</small></div><div class="tc-stat err"><b class="n-err"></b><small>ERRORES</small></div><div class="tc-stat"><b class="n-left"></b><small>FALTAN</small></div></div>
+      <div class="tc-seg">${LETTERS.map(() => '<span></span>').join('')}</div><div class="tc-flag"></div></div>`;
   }
   if (MODE === 'control'){
     $('previewSlot').appendChild($('viewport'));
     for (const t of TEAMS){
-      const c = $('cteam-' + t); c.style.setProperty('--tc', COLORS[t][0]);
-      c.innerHTML = `<div class="c-team-h"><b></b><span></span></div><div class="c-team-s"></div>
-        <div class="chips">${LETTERS.map((L, i) => `<button class="chip" data-i="${i}">${L}</button>`).join('')}</div>`;
+      const c = $('cteam-' + t); setPal(c, t);
+      c.innerHTML = `<div class="ct-h"><div class="ct-name"></div><div class="ct-time"></div></div><div class="ct-stats"></div>
+        <div class="chips">${LETTERS.map((L, i) => `<button class="chip" data-i="${i}" aria-label="Letra ${L}">${L}</button>`).join('')}</div>`;
       c.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
         const i = +ch.dataset.i;
-        if (state.active !== t){ if (!isOpen(state.teams[t].status[i])) return; pushUndo(); state.running = false; isClock = false; state.active = t; state.teams[t].idx = i; commit('turn'); }
-        else jumpTo(t, i);
+        if (state.active !== t){
+          if (!isOpen(state.teams[t].status[i]) || state.finished) return;
+          pushUndo(); state.running = false; isClock = false; state.active = t; state.teams[t].idx = i; commit('turn');
+        } else jumpTo(t, i);
       }));
     }
+  } else {
+    $('hole').classList.toggle('studio', MODE === 'pantalla');
   }
   if (MODE === 'pantalla') $('hostbar').hidden = false;
 }
@@ -707,118 +888,139 @@ function fit(){
   $('stage').style.transform = `translate(${(W - 1920 * s) / 2}px, ${(H - 1080 * s) / 2}px) scale(${s})`;
 }
 function layout(){
-  if (MODE === 'pantalla') $('viewport').style.bottom = $('hostbar').offsetHeight + 'px';
+  if (MODE === 'pantalla') $('viewport').style.bottom = ($('hostbar').offsetHeight + 24) + 'px';
   fit();
 }
 
 let lastActive = null, lastEvN = null, booted = false;
-function ruleText(w, L){ return (w && w.t === 'contiene' ? 'Contiene la ' : 'Con la ') + L; }
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+const ruleText = (w) => w && w.t === 'contiene' ? 'Contiene la' : 'Con la';
 
 function render(){
   const team = state.active, T = state.teams[team];
-  const [c1, c2] = COLORS[team];
-  document.documentElement.style.setProperty('--team', c1);
-  document.documentElement.style.setProperty('--team2', c2);
+  const root = document.documentElement.style;
+  PAL[team].forEach((c, k) => root.setProperty('--team-' + (k + 1), c));
 
   // ring
   const ring = $('ring');
   ring.classList.toggle('t-naranja', team === 'naranja');
   ring.querySelectorAll('.ball').forEach((b, i) => {
     const st = T.status[i];
-    b.className = 'ball' + (st !== 'pending' ? ' ' + st : '') + (i === T.idx && !state.finished ? ' current' : '');
+    const cls = 'ball' + (st !== 'pending' ? ' ' + st : '') + (i === T.idx && !state.finished ? ' current' : '');
+    if (b.className !== cls) b.className = cls;
+    const mk = b.querySelector('.mk'), want = MARK[st] || '';
+    if (mk.dataset.k !== want){ mk.dataset.k = want; mk.innerHTML = want ? ic(want) : ''; }
   });
   if (lastActive !== null && lastActive !== team){ ring.classList.remove('swap'); void ring.offsetWidth; ring.classList.add('swap'); }
   lastActive = team;
 
-  // cards
+  // turn chip
+  $('tcName').textContent = state.finished ? 'Fin del juego' : T.name;
+  $('turnchip').classList.toggle('running', state.running);
+  $('turnchip').querySelector('small').textContent = state.finished ? 'ROSCO' : 'JUEGA';
+
+  // team cards
   for (const t of TEAMS){
     const X = state.teams[t], c = $('card-' + t);
     const on = t === team && !state.finished;
     c.classList.toggle('on', on); c.classList.toggle('off', !on && !state.finished);
     c.classList.toggle('running', on && state.running);
     const nm = c.querySelector('.tc-name');
-    nm.textContent = X.name; nm.style.fontSize = X.name.length > 16 ? '22px' : X.name.length > 12 ? '27px' : '';
-    c.querySelector('.tc-live span').textContent = on ? (state.running ? 'EN JUEGO' : 'SU TURNO') : 'ESPERA';
+    nm.textContent = X.name; nm.style.fontSize = X.name.length > 15 ? '26px' : X.name.length > 11 ? '31px' : '';
+    c.querySelector('.tc-state span').textContent = on ? (state.running ? 'EN JUEGO' : 'SU TURNO') : 'ESPERA';
     const s = Math.ceil(X.time), clk = c.querySelector('.tc-clock');
     clk.textContent = s; clk.classList.toggle('low', s <= 10 && s > 0); clk.classList.toggle('zero', s === 0);
+    const bar = c.querySelector('.tc-bar');
+    bar.firstElementChild.style.width = Math.max(0, Math.min(100, X.time / X.seconds * 100)) + '%';
+    bar.classList.toggle('low', s <= 10);
     c.querySelector('.n-ok').textContent = count(X, 'correct');
     c.querySelector('.n-err').textContent = count(X, 'wrong');
-    c.querySelectorAll('.tc-dots span').forEach((d, i) => d.className = X.status[i] === 'pending' ? '' : X.status[i]);
-    c.querySelector('.tc-badge').textContent = !hasLetters(X) ? (count(X,'wrong') === 0 ? '🏆 ¡ROSCO COMPLETO!' : 'ROSCO TERMINADO') : X.time <= 0 ? '⏱ SIN TIEMPO' : '';
+    c.querySelector('.n-left').textContent = X.status.filter(isOpen).length;
+    c.querySelectorAll('.tc-seg span').forEach((d, i) => { const k = X.status[i] === 'pending' ? '' : X.status[i]; if (d.className !== k) d.className = k; });
+    const flag = c.querySelector('.tc-flag');
+    const f = !hasLetters(X) ? (count(X,'wrong') === 0 ? ic('trophy') + 'ROSCO COMPLETO' : ic('check') + 'ROSCO TERMINADO') : X.time <= 0 ? ic('clock') + 'SIN TIEMPO' : '';
+    if (flag.dataset.f !== f){ flag.dataset.f = f; flag.innerHTML = f; }
   }
 
   // current letter
-  const i = T.idx, w = i >= 0 ? T.words[i] : null, passed = w && T.status[i] === 'passed';
-  const L = w ? LETTERS[i] : '✓';
-  $('dbBall').textContent = L; $('dbBall').classList.toggle('passed', !!passed);
-  $('ciLetter').textContent = L; $('ciLetter').classList.toggle('passed', !!passed);
+  const i = T.idx, w = i >= 0 ? T.words[i] : null, passed = !!(w && T.status[i] === 'passed');
+  const L = w ? LETTERS[i] : '';
+  $('ciBall').firstElementChild.textContent = L || '·'; $('ciBall').classList.toggle('passed', passed);
   $('ciTeam').textContent = T.name;
-  $('ciRule').textContent = w ? ruleText(w, LETTERS[i]) : (hasLetters(T) ? 'Sin tiempo' : 'Rosco terminado');
-  $('dbRule').innerHTML = '';
-  $('dbRule').append(w ? ruleText(w, LETTERS[i]) : T.name);
-  if (passed){ const em = document.createElement('em'); em.textContent = '· PASADA'; $('dbRule').append(em); }
-  const def = $('dbDef');
-  const dtext = w ? (w.d || 'Definición pendiente') : (canPlay(other(team)) ? 'Turno del otro equipo' : 'No quedan letras para jugar');
-  if (state.finished){ $('dbRule').textContent = 'Fin del Rosco'; $('dbBall').textContent = '🏆'; }
-  def.textContent = state.finished ? 'Gana el que tiene más aciertos · si empatan, el que tiene menos errores' : dtext;
-  def.className = 'db-def' + (dtext.length > 150 ? ' xs' : dtext.length > 105 ? ' s' : '') + (w && !w.d ? ' missing' : '');
+  $('ciRule').textContent = w ? ruleText(w) + ' ' + L : (hasLetters(T) ? 'Sin tiempo' : 'Rosco terminado');
+  $('ltTab').classList.toggle('passed', passed);
+  $('ltRule').textContent = state.finished ? 'Fin del' : w ? ruleText(w) : T.name;
+  $('ltLetter').textContent = state.finished ? '' : L;
+  $('ltPassed').classList.toggle('show', passed && !state.finished);
+  const def = $('ltDef');
+  let dtext = w ? (w.d || 'Definición pendiente') : (canPlay(other(team)) ? 'Turno del otro equipo' : 'No quedan letras para jugar');
+  if (state.finished) dtext = 'Gana el que tiene más aciertos. Si empatan, el que tiene menos errores.';
+  if (state.finished) $('ltRule').textContent = 'Fin del rosco';
+  def.textContent = dtext;
+  def.className = 'lt-def' + (dtext.length > 150 ? ' xs' : dtext.length > 105 ? ' s' : '') + (w && !w.d && !state.finished ? ' missing' : '');
 
-  // final
+  // final card
   const fin = $('final');
   if (state.finished){
     const A = state.teams.azul, N = state.teams.naranja;
     const a = count(A,'correct'), n = count(N,'correct'), ae = count(A,'wrong'), ne = count(N,'wrong');
-    let title, sub = '';
-    if (a !== n) title = '¡GANA ' + (a > n ? A.name : N.name) + '!';
-    else if (ae !== ne){ title = '¡GANA ' + (ae < ne ? A.name : N.name) + '!'; sub = 'Empate en aciertos · gana por menos errores'; }
-    else title = '¡EMPATE!';
-    fin.innerHTML = `<h1></h1><div class="sub"></div><div class="sc">${TEAMS.map(t => `<div style="--tc:${COLORS[t][0]}"><h3></h3><b>${count(state.teams[t],'correct')}</b><p>${count(state.teams[t],'wrong')} errores</p></div>`).join('')}</div>`;
-    fin.querySelector('h1').textContent = title.toUpperCase();
-    fin.querySelector('.sub').textContent = sub || 'ACIERTOS';
-    fin.querySelectorAll('h3').forEach((h, k) => h.textContent = state.teams[TEAMS[k]].name);
-    if (!fin.classList.contains('show')) fin.classList.add('show');
+    let win = null, sub = 'Más aciertos';
+    if (a !== n) win = a > n ? 'azul' : 'naranja';
+    else if (ae !== ne){ win = ae < ne ? 'azul' : 'naranja'; sub = 'Empate en aciertos · menos errores'; }
+    else sub = 'Mismos aciertos y errores';
+    fin.innerHTML = `<div class="fn-head">${ic('trophy')}RESULTADO FINAL</div><div class="fn-win"></div><div class="fn-sub"></div>
+      <div class="fn-scores">${TEAMS.map(t => `<div class="fn-team${t === win ? ' win' : ''}" data-t="${t}"><h3></h3><b>${count(state.teams[t],'correct')}</b><small>ACIERTOS</small><p>${plural(count(state.teams[t],'wrong'), 'error', 'errores')}</p></div>`).join('')}</div>`;
+    fin.querySelector('.fn-win').textContent = win ? 'Gana ' + state.teams[win].name : '¡Empate!';
+    fin.querySelector('.fn-sub').textContent = sub.toUpperCase();
+    fin.querySelectorAll('.fn-team').forEach(el => { setPal(el, el.dataset.t); el.querySelector('h3').textContent = state.teams[el.dataset.t].name; });
+    fin.classList.add('show');
   } else fin.classList.remove('show');
 
-  // host bar / control panel
+  // host controls
   document.querySelectorAll('[data-act="correct"],[data-act="passed"],[data-act="wrong"]').forEach(b => b.disabled = state.finished || !w);
   document.querySelectorAll('[data-act="play"]').forEach(b => {
     b.classList.toggle('running', state.running); b.disabled = state.finished;
-    b.innerHTML = (state.running ? '⏸ Pausar' : '▶ Arrancar') + (MODE === 'control' ? ' reloj' : '') + '<kbd>Espacio</kbd>';
+    const html = ic(state.running ? 'pause' : 'play') + (state.running ? 'Pausar reloj' : 'Arrancar reloj') + '<kbd>Espacio</kbd>';
+    if (b.dataset.h !== html){ b.dataset.h = html; b.innerHTML = html; }
   });
   document.querySelectorAll('[data-act="undo"]').forEach(b => b.disabled = !undoStack.length);
   if (MODE === 'pantalla'){
     $('hbAnsText').textContent = w ? w.w : '—';
     $('hbAns').classList.toggle('hidden', !state.showAnswer);
+    $('btnReveal').innerHTML = ic(state.showAnswer ? 'eyeoff' : 'eye');
   }
   if (MODE === 'control') renderControl(T, w, i, passed);
 
   // one-shot events (animations + sound)
   const ev = state.ev || { n: 0 };
-  if (lastEvN !== ev.n){
-    const fresh = booted; lastEvN = ev.n;
-    if (fresh) playEvent(ev);
-  }
+  if (lastEvN !== ev.n){ const fresh = booted; lastEvN = ev.n; if (fresh) playEvent(ev); }
 }
 
 function renderControl(T, w, i, passed){
-  $('cTurn').classList.toggle('running', state.running);
-  $('cTurn').querySelector('span').textContent = state.finished ? 'Fin del juego' : 'Turno: ' + T.name + (state.running ? ' · reloj corriendo' : ' · reloj frenado');
-  $('cBall').textContent = w ? LETTERS[i] : '✓'; $('cBall').classList.toggle('passed', !!passed);
-  $('cRule').textContent = w ? ruleText(w, LETTERS[i]) + (passed ? ' · pasada' : '') : '—';
-  $('cDef').textContent = w ? (w.d || '⚠ Falta la definición — cargala en ✏️ Preguntas') : '—';
-  $('cDef').classList.toggle('missing', !!(w && !w.d));
-  $('cAns').textContent = w ? w.w : '—';
+  $('qTurn').classList.toggle('running', state.running);
+  $('qTeam').textContent = state.finished ? 'Fin del juego' : T.name;
+  $('qState').textContent = state.finished ? '' : state.running ? 'Reloj corriendo' : 'Reloj frenado';
+  $('qBall').textContent = w ? LETTERS[i] : '—'; $('qBall').classList.toggle('passed', passed);
+  $('qRule').textContent = w ? ruleText(w) + ' ' + LETTERS[i] : (state.finished ? 'Juego terminado' : 'Sin letras');
+  $('qTag').hidden = !passed;
+  $('qDef').textContent = w ? (w.d || 'Falta la definición. Cargala en Preguntas.') : '—';
+  $('qDef').classList.toggle('missing', !!(w && !w.d));
+  $('qAns').textContent = w ? w.w : '—';
   for (const t of TEAMS){
     const X = state.teams[t], c = $('cteam-' + t);
-    c.querySelector('.c-team-h b').textContent = X.name + (t === state.active && !state.finished ? ' ◀' : '');
-    c.querySelector('.c-team-h span').textContent = Math.ceil(X.time) + 's';
-    c.querySelector('.c-team-s').innerHTML = `<em>${count(X,'correct')} aciertos</em> · <strong>${count(X,'wrong')} errores</strong> · ${X.status.filter(isOpen).length} por jugar`;
-    c.querySelectorAll('.chip').forEach((ch, k) => ch.className = 'chip' + (X.status[k] !== 'pending' ? ' ' + X.status[k] : '') + (k === X.idx && t === state.active ? ' cur' : ''));
+    c.classList.toggle('on', t === state.active && !state.finished);
+    c.querySelector('.ct-name').textContent = X.name;
+    c.querySelector('.ct-time').innerHTML = Math.ceil(X.time) + '<small>s</small>';
+    c.querySelector('.ct-stats').innerHTML = `<span><b class="g">${count(X,'correct')}</b> ${count(X,'correct') === 1 ? 'acierto' : 'aciertos'}</span><span><b class="r">${count(X,'wrong')}</b> ${count(X,'wrong') === 1 ? 'error' : 'errores'}</span><span><b class="w">${X.status.filter(isOpen).length}</b> por jugar</span>`;
+    c.querySelectorAll('.chip').forEach((ch, k) => {
+      const cls = 'chip' + (X.status[k] !== 'pending' ? ' ' + X.status[k] : '') + (k === X.idx && t === state.active && !state.finished ? ' cur' : '');
+      if (ch.className !== cls) ch.className = cls;
+    });
   }
 }
 
-function banner(text, color){
-  const b = $('banner'); b.textContent = text; b.style.color = color;
+function banner(text, bg, fg){
+  const b = $('banner'); b.style.setProperty('--bc', bg); b.style.setProperty('--bt', fg); $('bannerTxt').textContent = text;
   b.classList.remove('go'); void b.offsetWidth; b.classList.add('go');
 }
 function flashRing(color){
@@ -832,12 +1034,12 @@ function playEvent(ev){
     case 'correct': {
       const b = ring.children[ev.i];
       if (b && ev.team === state.active){ b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
-      flashRing('rgba(62,224,122,.8)'); audible && sfx.correct(); break; }
+      flashRing('rgba(34,197,94,.75)'); audible && sfx.correct(); break; }
     case 'wrong':
-      flashRing('rgba(255,70,70,.85)'); ring.classList.remove('shake'); void ring.offsetWidth; ring.classList.add('shake');
+      flashRing('rgba(239,68,68,.85)'); ring.classList.remove('shake'); void ring.offsetWidth; ring.classList.add('shake');
       audible && sfx.wrong(); break;
-    case 'passed': banner('¡PASAPALABRA!', '#ffd21f'); audible && sfx.pass(); break;
-    case 'timeup': banner('¡TIEMPO!', '#ff4b4b'); flashRing('rgba(255,70,70,.85)'); audible && sfx.timeUp(); break;
+    case 'passed': banner('PASAPALABRA', '#FACC15', '#1f1600'); audible && sfx.pass(); break;
+    case 'timeup': banner('¡TIEMPO!', '#EF4444', '#ffffff'); flashRing('rgba(239,68,68,.85)'); audible && sfx.timeUp(); break;
     case 'start': audible && sfx.start(); break;
     case 'tick': audible && sfx.tickLow(); break;
     case 'end': audible && sfx.end(); break;
@@ -868,17 +1070,19 @@ const sfx = {
   end(){ [523,659,784,1046].forEach((f,k) => tone(f,k*.13,.35,'triangle',.2)); },
 };
 
+
 /* ================= modals ================= */
 function openModal(id){
   if (id === 'editor') buildEditor(editorTab);
   if (id === 'settings') fillSettings();
   if (id === 'obs') fillUrls();
   $(id).classList.add('open');
+  const f = $(id).querySelector('input:not([readonly]),select,textarea,button'); f && f.focus({ preventScroll: true });
 }
 function closeModal(id){ $(id).classList.remove('open'); if (id === 'editor') draft = null; }
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.open)));
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
-  if (e.target === m || e.target.hasAttribute('data-close')) closeModal(m.id);
+  if (e.target === m || e.target.closest('[data-close]')) closeModal(m.id);
 }));
 const anyModalOpen = () => !!document.querySelector('.modal.open');
 
@@ -893,11 +1097,9 @@ function fillUrls(){
 document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
   const inp = $(b.dataset.copy); inp.select();
   (navigator.clipboard ? navigator.clipboard.writeText(inp.value) : Promise.reject()).catch(() => document.execCommand('copy'));
-  b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = 'Copiar', 1500);
+  b.innerHTML = ic('check') + 'Copiado'; setTimeout(() => b.innerHTML = ic('copy') + 'Copiar', 1500);
 }));
-function openOverlay(){
-  window.open(overlayUrl(), 'rosco-overlay', 'popup,width=1280,height=760');
-}
+function openOverlay(){ window.open(overlayUrl(), 'rosco-overlay', 'popup,width=1280,height=760'); }
 
 /* editor */
 let editorTab = 'azul', draft = null;
@@ -988,6 +1190,7 @@ document.addEventListener('keydown', e => {
   if (MODE === 'overlay') return;
   if (anyModalOpen()){ if (e.key === 'Escape') document.querySelectorAll('.modal.open').forEach(m => closeModal(m.id)); return; }
   if (e.target.matches('input,textarea,select')) return;
+  if (e.target.matches('button') && (e.key === 'Enter' || e.key === ' ')) e.target.blur();
   const k = e.key.toLowerCase();
   if (e.code === 'Space' || k === ' '){ e.preventDefault(); togglePlay(); }
   else if (k === 'c' || k === 'enter') mark('correct');
@@ -1012,7 +1215,7 @@ new ResizeObserver(fit).observe($('viewport'));
 if (MODE === 'overlay'){
   ensureAudio();
   if (!ac || ac.state !== 'running'){
-    const h = document.createElement('div'); h.className = 'soundhint'; h.textContent = '🔇 Clic acá para activar el sonido';
+    const h = document.createElement('div'); h.className = 'soundhint'; h.innerHTML = ic('volume') + 'Clic para activar el sonido';
     $('stage').appendChild(h);
     const go = () => { ensureAudio(); setTimeout(() => { if (ac && ac.state === 'running') h.remove(); }, 100); };
     document.addEventListener('click', go);
